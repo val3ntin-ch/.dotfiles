@@ -8,6 +8,9 @@ set -gx XDG_DATA_HOME $HOME/.local/share
 set -gx XDG_STATE_HOME $HOME/.local/state
 mkdir -p $XDG_CACHE_HOME/fish $XDG_STATE_HOME/fish
 
+# ── Dotfiles location ─────────────────────────────────────────────────────
+set -gx DOTFILES_DIR $HOME/.dotfiles
+
 # ── Editors ───────────────────────────────────────────────────────────────
 set -gx EDITOR nvim
 set -gx VISUAL nvim
