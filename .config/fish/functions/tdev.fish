@@ -11,10 +11,12 @@ function tdev -d "Create structured tmux dev session: editor + dev split"
         tmux rename-window -t "$name:1" editor
         tmux send-keys -t "$name:editor" 'nvim .' Enter
 
-        # Window 2: dev (horizontal split)
+        # Window 2: dev — main pane + right 25% + bottom 15% (server)
         tmux new-window -t $name -n dev -c $root
-        tmux split-window -t "$name:dev" -h -c $root
+        tmux split-window -t "$name:dev" -h -l 25% -c $root
         tmux select-pane -t "$name:dev.left"
+        tmux split-window -t "$name:dev" -v -l 15% -c $root
+        tmux select-pane -t "$name:dev.{top-left}"
     end
 
     if test -n "$TMUX"
