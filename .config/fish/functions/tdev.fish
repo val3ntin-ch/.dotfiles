@@ -2,7 +2,14 @@ function tdev -d "Create structured tmux dev session: editor + dev split"
     set -l name (basename $PWD)
     test (count $argv) -ge 1; and set name $argv[1]
     set -l root $PWD
-    test (count $argv) -ge 2; and set root $argv[2]
+    if test (count $argv) -ge 2
+        set root $argv[2]
+    else if test (count $argv) -eq 1
+        # resolve project path via zoxide (like `z <name>`)
+        set -l zdir (zoxide query $argv[1] 2>/dev/null)
+        test -n "$zdir"; and set root $zdir
+        set name (basename $root)
+    end
 
     if not tmux has-session -t $name 2>/dev/null
         tmux new-session -d -s $name -c $root
