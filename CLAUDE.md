@@ -67,30 +67,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ---
 
-## 5. Current Setup State
+## 5. Repo Facts
 
-**Platform:** macOS only. Linux support is planned but not yet implemented.
-
-**Package manager:** Homebrew. All tools installed via `brew install` / `brew install --cask`.
-
-**Bootstrap:** `install.sh` at the repo root handles everything:
-
-```
-clone repo → run install.sh → open new terminal → done
-```
-
-Steps inside `install.sh`:
-1. Install Homebrew (if missing) + `brew update`
-2. Core tools: fish, zsh, starship, antidote, neovim, git, gh, lazygit, git-delta, stow, tmux, vivid, ouch, bat, eza, fnm, pnpm, go, pyenv, rbenv
-3. Yazi + deps: yazi, ffmpeg-full, sevenzip, jq, poppler, fd, ripgrep, fzf, zoxide, resvg, imagemagick-full → `brew link ffmpeg-full imagemagick-full -f --overwrite`
-4. Sesh: `brew install joshmedeski/sesh/sesh`
-5. Casks: ghostty, font-jetbrains-mono-nerd-font, font-symbols-only-nerd-font
-6. Stow dotfiles to `$HOME`
-7. `chsh` to brew zsh
-8. Fish plugins via Fisher (bootstrapped via curl, reads `fish_plugins`)
-9. Tmux plugins via TPM (headless tmux session triggers auto-bootstrap)
-10. Node LTS via fnm
-
-**Not handled by install.sh:** yazi plugins (`ya pkg install`) — optional, run manually.
-
-**Stow ignore:** `.stow-local-ignore` (filename required by GNU Stow, cannot be renamed) excludes: `*.md`, `CLAUDE.md`, `.git`, `.gitignore`, `.claude`, `.stow-local-ignore`, `install.sh`.
+- **Platform:** macOS only (Linux planned, not implemented). Package manager: Homebrew.
+- **Bootstrap:** `install.sh` — full tool list, steps, and post-install docs live in `README.md` (single source of truth; don't duplicate them here).
+- **Stow:** configs symlinked to `$HOME`. `.stow-local-ignore` excludes repo-meta files (md, git, install.sh, .claude). Restow: `cd ~/.dotfiles && stow --target="$HOME" --restow .`
+- **Machine-local (never commit):** `~/.config/zsh/.zshrc.local` (tokens/secrets), `~/.config/git/config.local` (identity), `~/.config/fish/config-local.fish`.
+- **Vendor code not committed:** tmux `plugins/`, yazi `plugins/`, fisher/antidote-managed files — regenerated per machine (see `.gitignore`).

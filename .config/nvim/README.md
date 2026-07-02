@@ -63,9 +63,12 @@ Managed via `lazyvim.json`. Toggle with `:LazyExtras` inside nvim.
 |---|---|
 | `lang.typescript` + `lang.typescript.vtsls` | vtsls LSP, tsx/ts treesitter, nvim-ts-autotag |
 | `lang.json` | jsonls + SchemaStore validation |
-| `lang.css` | cssls, scss/css treesitter |
 | `lang.tailwind` | tailwindcss-language-server |
 | `lang.markdown` | marksman LSP, markdown preview |
+| `lang.docker` | dockerls, docker-compose LSP, dockerfile treesitter |
+| `lang.yaml` | yamlls + schema validation |
+
+> CSS/HTML/GraphQL/Emmet LSPs configured manually in `lua/plugins/webdev.lua` (no `lang.css` extra — doesn't cover emmet/graphql).
 
 ### Formatting & linting
 | Extra | Provides |
@@ -79,6 +82,7 @@ Managed via `lazyvim.json`. Toggle with `:LazyExtras` inside nvim.
 | `coding.yanky` | Enhanced yank/paste history |
 | `editor.dial` | Increment/decrement values with `+`/`-` |
 | `editor.inc-rename` | LSP rename with live preview |
+| `editor.neo-tree` | File explorer sidebar (`<leader>e`) |
 
 ### Utils
 | Extra | Provides |

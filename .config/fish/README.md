@@ -137,7 +137,6 @@ fish PATH is a list variable (`$PATH`), not a colon-separated string.
 | `GOPATH` | `~/.local/share/go` |
 | `JAVA_HOME` | Zulu JDK 17 (if installed) — React Native Android |
 | `ANDROID_HOME` | `~/Library/Android/sdk` (if installed) |
-| `NVM_DIR` | `~/.nvm` (set for script compatibility) |
 
 ---
 
@@ -351,8 +350,16 @@ Starship is a cross-shell prompt written in Rust.
 Config lives at `~/.config/starship/starship.toml` — shared between fish and zsh.
 Your prompt looks **identical** in both shells.
 
-Current format: `$directory$character` on left, `$all` on right.
+Current format: `$username$hostname$directory$character` on left (username/hostname
+SSH-only), git + languages + duration + time on right.
 Catppuccin Mocha palette defined in starship.toml via `[palettes.catppuccin_mocha]`.
+
+---
+
+### `conf.d/fnm.fish` — fnm (Fast Node Manager)
+
+Runs `fnm env --use-on-cd | source` — auto-switches node version when entering
+a directory with `.nvmrc` / `.node-version`. Mirrors the zsh setup.
 
 ---
 

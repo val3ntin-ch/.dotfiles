@@ -165,7 +165,7 @@ ghostty +list-themes
 ```
 
 The Ghostty theme only sets the 16 ANSI colors. Full Catppuccin Mocha theming
-requires the entire stack — see root `CLAUDE.md` § Catppuccin Mocha layered theming.
+comes from each tool's own config (tmux, nvim, lazygit, yazi, bat, fzf, starship).
 
 ---
 

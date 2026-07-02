@@ -537,6 +537,10 @@ fallback line in `.zsh_plugins.txt`. Both are compatible with fzf-tab and autosu
 | `tk` | `tmux kill-session -t` |
 | `tka` | `tmux kill-server` — kill everything |
 | `ts` | `tmux switch-client -t` |
+| `tad` | `tmux attach -d -t` — detach others, then attach |
+| `tw` | `tmux list-windows` |
+| `trn` | `tmux rename-session` |
+| `tpk` | `tmux kill-pane` |
 | `tsrc` | `tmux source-file ~/.config/tmux/tmux.conf` |
 
 ### pnpm / Node
