@@ -296,7 +296,7 @@ alias tw='tmux list-windows'                      # list windows in current sess
 alias tk='tmux kill-session -t'                   # kill named session
 alias tka='tmux kill-server'                      # kill EVERYTHING
 alias ts='tmux switch-client -t'                  # switch to session by name
-alias tr='tmux rename-session'                    # rename current session
+alias trn='tmux rename-session'                   # rename current session
 alias tpk='tmux kill-pane'                        # kill current pane
 alias tsrc='tmux source-file ~/.config/tmux/tmux.conf'  # reload config
 
