@@ -69,10 +69,14 @@ fish -c "
   fisher install
 "
 
-# ── 9. Tmux plugins (TPM auto-bootstrap) ─────────────────────────────────────
+# ── 9. Tmux plugins (TPM) ─────────────────────────────────────────────────────
 step "Tmux plugins"
-tmux new-session -d -s _setup -x 220 -y 50 2>/dev/null || true
-sleep 6
+TPM_DIR="$HOME/.config/tmux/plugins/tpm"
+[[ -d "$TPM_DIR" ]] || git clone https://github.com/tmux-plugins/tpm "$TPM_DIR"
+# install_plugins needs a running server to read the plugin list from tmux.conf
+tmux start-server 2>/dev/null || true
+tmux new-session -d -s _setup 2>/dev/null || true
+"$TPM_DIR/bin/install_plugins"
 tmux kill-session -t _setup 2>/dev/null || true
 
 # ── 10. Node LTS ──────────────────────────────────────────────────────────────
