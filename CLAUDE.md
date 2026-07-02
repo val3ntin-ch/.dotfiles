@@ -64,13 +64,3 @@ For multi-step tasks, state a brief plan:
 ```
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
-
----
-
-## 5. Repo Facts
-
-- **Platform:** macOS only (Linux planned, not implemented). Package manager: Homebrew.
-- **Bootstrap:** `install.sh` — full tool list, steps, and post-install docs live in `README.md` (single source of truth; don't duplicate them here).
-- **Stow:** configs symlinked to `$HOME`. `.stow-local-ignore` excludes repo-meta files (md, git, install.sh, .claude). Restow: `cd ~/.dotfiles && stow --target="$HOME" --restow .`
-- **Machine-local (never commit):** `~/.config/zsh/.zshrc.local` (tokens/secrets), `~/.config/git/config.local` (identity), `~/.config/fish/config-local.fish`.
-- **Vendor code not committed:** tmux `plugins/`, yazi `plugins/`, fisher/antidote-managed files — regenerated per machine (see `.gitignore`).
