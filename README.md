@@ -75,6 +75,7 @@ nvim
     ├── zsh/                Zsh — antidote plugins, aliases, completions
     ├── nvim/               Neovim — LazyVim + React/TS/Tailwind/ESLint/Prettier
     ├── tmux/               Tmux — keybindings, plugins, status bar
+    ├── lazygit/            Lazygit — Catppuccin Mocha theme + delta pager
     ├── ghostty/            Ghostty terminal config
     ├── starship/           Starship prompt (shared by fish + zsh)
     ├── sesh/               Sesh session manager
@@ -189,7 +190,7 @@ nvim
 Native (no plugin needed):
 - **dotenv** — auto-source `.env` on `cd` with per-directory allow/deny list
 - **magic-enter** — empty `Enter` → `eza -la` or `git status`
-- **colored man pages** — via `LESS_TERMCAP_*` env vars
+- **colored man pages** — via `MANPAGER=bat`
 
 ### Tmux plugins — via [TPM](https://github.com/tmux-plugins/tpm)
 

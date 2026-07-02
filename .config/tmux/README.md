@@ -125,7 +125,7 @@ See `~/.config/sesh/README.md` for full sesh docs.
 
 ## Plugins
 
-Managed by [TPM](https://github.com/tmux-plugins/tpm). Plugins committed to repo — no install needed after clone.
+Managed by [TPM](https://github.com/tmux-plugins/tpm). Plugin code is **not** committed (`plugins/` is gitignored) — `install.sh` installs them; on an existing machine run `<prefix> I`.
 
 | Plugin | Purpose |
 |---|---|
@@ -158,7 +158,7 @@ Position: **top**
 [left: empty]          [window tabs]          [dir / app / session / cpu / battery / time]
 ```
 
-Window tab shows `name` + ` ` when zoomed.
+Window tab shows `name` + `()` when zoomed.
 
 ---
 
@@ -169,7 +169,7 @@ Window tab shows `name` + ` ` when zoomed.
 | Save interval | 15 minutes |
 | Auto-restore | Off (manual) |
 | Save path | `~/.config/tmux/resurrect/` |
-| Nvim strategy | session (restores open buffers) |
+| Nvim strategy | file (restores open files) |
 
 **Manual restore:** `<prefix> Ctrl+r`
 **Manual save:** `<prefix> Ctrl+s`
