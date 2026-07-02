@@ -1,6 +1,8 @@
 function tdev -d "Create structured tmux dev session: editor + dev split"
-    set -l name (count $argv -gt 0; and echo $argv[1]; or basename $PWD)
-    set -l root (count $argv -gt 1; and echo $argv[2]; or echo $PWD)
+    set -l name (basename $PWD)
+    test (count $argv) -ge 1; and set name $argv[1]
+    set -l root $PWD
+    test (count $argv) -ge 2; and set root $argv[2]
 
     if not tmux has-session -t $name 2>/dev/null
         tmux new-session -d -s $name -c $root
