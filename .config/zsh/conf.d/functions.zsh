@@ -289,34 +289,55 @@ fts() {
 # what does this do?
 # Creates a tmux session named after the project with a sensible layout:
 #   Window 1: editor (nvim)
-#   Window 2: split pane — terminal left, terminal right (for running things)
+#   Window 2: dev — main pane (nvim) + right 10% + bottom 5% (server)
 # If the session already exists, just attaches to it.
+# Mirrors fish version: .config/fish/functions/tdev.fish
 #
-# Usage: tdev (uses cwd), tdev myproject (named session)
+# Usage: tdev (uses cwd), tdev myproject (resolves via zoxide), tdev ./path
 tdev() {
-  local name="${1:-$(basename "$PWD")}"
-  local root="${2:-$PWD}"
+  local name root
+  name="$(basename "$PWD")"
+  root="$PWD"
+  if [[ $# -ge 2 ]]; then
+    name="$1"
+    root="$2"
+  elif [[ $# -eq 1 ]]; then
+    if [[ -d "$1" ]]; then
+      # arg is a path — use it directly
+      root="$(realpath "$1")"
+    else
+      # resolve project path via zoxide (like `z <name>`)
+      local zdir
+      zdir="$(zoxide query "$1" 2>/dev/null)"
+      [[ -n "$zdir" ]] && root="$zdir"
+    fi
+    name="$(basename "$root")"
+  fi
+  # tmux session names can't contain . or : (target separators)
+  name="${name//./_}"
 
   # Create session if it doesn't exist (-d = detached, don't attach yet)
-  if ! tmux has-session -t "$name" 2>/dev/null; then
-    tmux new-session -d -s "$name" -c "$root"
+  if ! tmux has-session -t "${name}" 2>/dev/null; then
+    tmux new-session -d -s "${name}" -c "$root"
 
     # Window 1: editor
-    tmux rename-window -t "$name:1" 'editor'
-    tmux send-keys -t "$name:editor" 'nvim .' Enter
+    tmux rename-window -t "${name}:1" 'editor'
+    tmux send-keys -t "${name}:editor" 'nvim .' Enter
 
-    # Window 2: dev (split horizontally)
-    tmux new-window -t "$name" -n 'dev' -c "$root"
-    tmux split-window -t "$name:dev" -h -c "$root"
-    # Focus left pane
-    tmux select-pane -t "$name:dev.left"
+    # Window 2: dev — main pane (nvim) + right 10% + bottom 5% (server)
+    tmux new-window -t "${name}" -n 'dev' -c "$root"
+    tmux split-window -t "${name}:dev" -h -l 10% -c "$root"
+    tmux select-pane -t "${name}:dev.left"
+    tmux split-window -t "${name}:dev" -v -l 5% -c "$root"
+    tmux select-pane -t "${name}:dev.{top-left}"
+    tmux send-keys -t "${name}:dev" 'nvim .' Enter
   fi
 
   # Attach (or switch if inside tmux already)
   if [[ -n "$TMUX" ]]; then
-    tmux switch-client -t "$name"
+    tmux switch-client -t "${name}"
   else
-    tmux attach-session -t "$name"
+    tmux attach-session -t "${name}"
   fi
 }
 
