@@ -288,8 +288,7 @@ fts() {
 #
 # what does this do?
 # Creates a tmux session named after the project with a sensible layout:
-#   Window 1: editor (nvim)
-#   Window 2: dev — main pane (nvim) + right 10% + bottom 5% (server)
+#   Single window "dev": nvim left 70% + terminal right 30%
 # If the session already exists, just attaches to it.
 # Mirrors fish version: .config/fish/functions/tdev.fish
 #
@@ -320,17 +319,11 @@ tdev() {
   if ! tmux has-session -t "${name}" 2>/dev/null; then
     tmux new-session -d -s "${name}" -c "$root"
 
-    # Window 1: editor
-    tmux rename-window -t "${name}:1" 'editor'
-    tmux send-keys -t "${name}:editor" 'nvim .' Enter
-
-    # Window 2: dev — main pane (nvim) + right 10% + bottom 5% (server)
-    tmux new-window -t "${name}" -n 'dev' -c "$root"
-    tmux split-window -t "${name}:dev" -h -l 10% -c "$root"
+    # Single window: nvim left 70% + terminal right 30%
+    tmux rename-window -t "${name}:1" 'dev'
+    tmux split-window -t "${name}:dev" -h -l 30% -c "$root"
     tmux select-pane -t "${name}:dev.left"
-    tmux split-window -t "${name}:dev" -v -l 5% -c "$root"
-    tmux select-pane -t "${name}:dev.{top-left}"
-    tmux send-keys -t "${name}:dev" 'nvim .' Enter
+    tmux send-keys -t "${name}:dev.left" 'nvim .' Enter
   fi
 
   # Attach (or switch if inside tmux already)

@@ -232,10 +232,6 @@ setopt GLOB_DOTS        # ls * matches dotfiles too (no need for ls .* separatel
 setopt EXTENDED_GLOB    # unlocks: ^pattern (negate), (#i) (case-insensitive), **/ (recursive)
 setopt NULL_GLOB        # if a glob matches nothing, remove it instead of erroring
 
-# Corrections
-setopt CORRECT          # if you mistype a command, ZSH suggests the correct one
-                        # "zsh: correct 'gti' to 'git' [nyae]?"
-
 # Quality of life
 setopt NO_BEEP          # silence the terminal bell
 setopt INTERACTIVE_COMMENTS  # allows `# comments` in the interactive shell
@@ -393,17 +389,6 @@ HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='bg=#313244,fg=#a6e3a1,bold'    # Surfa
 HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='bg=#313244,fg=#f38ba8,bold' # Surface1 + Red
 HISTORY_SUBSTRING_SEARCH_FUZZY=false    # exact match (fuzzy is noisy for long commands)
 HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=true  # skip duplicates while cycling
-
-# ── you-should-use ─────────────────────────────────────────────────────────
-#
-# Watches the commands you type. If you type a full
-# command that has an alias defined, it gently reminds you after execution.
-# Helps you actually learn and use the aliases you define.
-#
-YSU_MESSAGE_POSITION="after"            # show reminder after command output
-YSU_MODE=ALL                            # check both aliases and global aliases
-YSU_MESSAGE_FORMAT="$(print -P '%F{#f9e2af}alias hint:%f %F{#a6e3a1}%alias%f → %command')"
-YSU_IGNORED_ALIASES=("g" "v" "ls")     # don't remind about super-short aliases
 
 # ── fzf-tab ────────────────────────────────────────────────────────────────
 #

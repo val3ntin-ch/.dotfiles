@@ -1,4 +1,4 @@
-function tdev -d "Create structured tmux dev session: editor + dev split"
+function tdev -d "Create structured tmux dev session: nvim 70% + terminal 30%"
     set -l name (basename $PWD)
     test (count $argv) -ge 1; and set name $argv[1]
     set -l root $PWD
@@ -21,17 +21,11 @@ function tdev -d "Create structured tmux dev session: editor + dev split"
     if not tmux has-session -t $name 2>/dev/null
         tmux new-session -d -s $name -c $root
 
-        # Window 1: editor
-        tmux rename-window -t "$name:1" editor
-        tmux send-keys -t "$name:editor" 'nvim .' Enter
-
-        # Window 2: dev — main pane (nvim) + right 10% + bottom 5% (server)
-        tmux new-window -t $name -n dev -c $root
-        tmux split-window -t "$name:dev" -h -l 10% -c $root
+        # Single window: nvim left 70% + terminal right 30%
+        tmux rename-window -t "$name:1" dev
+        tmux split-window -t "$name:dev" -h -l 30% -c $root
         tmux select-pane -t "$name:dev.left"
-        tmux split-window -t "$name:dev" -v -l 5% -c $root
-        tmux select-pane -t "$name:dev.{top-left}"
-        tmux send-keys -t "$name:dev" 'nvim .' Enter
+        tmux send-keys -t "$name:dev.left" 'nvim .' Enter
     end
 
     if test -n "$TMUX"

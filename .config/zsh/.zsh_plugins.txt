@@ -79,13 +79,7 @@ hlissner/zsh-autopair
 # Auto-detects pbcopy (macOS), xclip/xsel (X11), wl-copy (Wayland).
 kutsan/zsh-system-clipboard
 
-# ── 9. YOU-SHOULD-USE ─────────────────────────────────────────────────────
-# After you run a command, if an alias exists for it, the plugin reminds you.
-# Trains you to actually use the aliases you've defined instead of forgetting.
-# Example: type `git status -sb` → "alias hint: gs → git status -sb"
-MichaelAquilina/zsh-you-should-use
-
-# ── 10. CD-GITROOT ────────────────────────────────────────────────────────
+# ── 9. CD-GITROOT ─────────────────────────────────────────────────────────
 # Adds `cdg` — jumps to the root of the current git repo instantly.
 # Useful when you're deep in src/components/ui/ and want the repo root.
 mollifier/cd-gitroot
