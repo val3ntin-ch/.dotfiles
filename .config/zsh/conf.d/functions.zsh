@@ -272,6 +272,13 @@ git-open() {
 # TMUX FUNCTIONS
 # ══════════════════════════════════════════════════════════════════════════════
 
+# fal — fuzzy alias finder: fal (all), fal git, fal tmux
+# Browse every defined alias in fzf, pre-filtered by argument
+fal() {
+  alias | sort | fzf --prompt='alias ❯ ' --query="$*" \
+    --preview='echo {}' --preview-window='down:3:wrap'
+}
+
 # fts — fuzzy tmux session switcher
 # Shows all sessions in fzf, preview shows windows in that session
 fts() {
