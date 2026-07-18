@@ -47,6 +47,18 @@ brew install --cask ghostty font-jetbrains-mono-nerd-font font-symbols-only-nerd
 step "Stowing dotfiles"
 # back up any real dirs that would conflict with stow symlinks
 [[ -d "$HOME/.config/nvim" && ! -L "$HOME/.config/nvim" ]] && mv "$HOME/.config/nvim" "$HOME/.config/nvim.bak"
+# back up any real files where stow needs a symlink (e.g. app-created
+# ~/.config/git/ignore or ~/.config/lazygit/config.yml) — otherwise stow
+# aborts the whole run with a conflict
+(cd "$DOTFILES" && git ls-files -- .config .zshenv) | while IFS= read -r f; do
+  target="$HOME/$f"
+  # skip if missing, a symlink, or already resolving into the repo
+  # (folded stow dirs make repo files look like real files at $HOME)
+  [[ -e "$target" && ! -L "$target" ]] || continue
+  [[ "$(realpath "$target")" == "$DOTFILES"/* ]] && continue
+  mv "$target" "$target.bak"
+  echo "  conflict backed up: $target → $target.bak"
+done
 # ensure runtime dirs exist before first use
 mkdir -p \
   "$HOME/.local/state/less" \

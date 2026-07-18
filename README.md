@@ -41,7 +41,7 @@ Open a new terminal when done. Zsh is the default shell with all plugins active.
 | 3 | Install Yazi + preview dependencies via `brew install` |
 | 4 | Install Sesh via custom tap |
 | 5 | Install Ghostty + Nerd Fonts via `brew install --cask` |
-| 6 | Stow dotfiles to `$HOME` via GNU Stow + create runtime dirs |
+| 6 | Stow dotfiles to `$HOME` via GNU Stow + create runtime dirs. Pre-existing real files that would conflict (e.g. app-created `~/.config/git/ignore`) are backed up as `*.bak` automatically |
 | 7 | Set zsh as default shell via `chsh` |
 | 8 | Install fish plugins via Fisher |
 | 9 | Bootstrap tmux plugins via TPM |
@@ -218,10 +218,32 @@ Native (no plugin needed):
 
 ## Day-to-day
 
+**Update a machine to the latest dotfiles:**
+
+```bash
+cd ~/.dotfiles && git pull
+exec zsh          # or: exec fish — restart shell to pick up changes
+```
+
+Configs are symlinks, so `git pull` updates them in place — no re-stow needed
+unless files were added/moved. Tmux: `Ctrl+t r` reloads the config; sessions
+created before a `tdev` layout change keep the old layout (`tk <name>`, then
+`tdev` again).
+
 **Re-stow after adding or moving dotfiles:**
 
 ```bash
 cd ~/.dotfiles && stow --target="$HOME" --restow .
+```
+
+**Stow refuses with "cannot stow ... over existing target"** — a real file sits
+where a symlink must go (`install.sh` handles this automatically; manual fix):
+
+```bash
+cd ~/.dotfiles
+stow --adopt .    # moves the machine's files into the repo
+git diff          # inspect what the machine version had
+git restore .     # keep the repo version (or commit files you want to keep)
 ```
 
 **Yazi plugins** — not installed by `install.sh`, run once manually:
