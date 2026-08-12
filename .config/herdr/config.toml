@@ -1,0 +1,10 @@
+# ~/.config/herdr/config.toml
+# Herdr — terminal agent multiplexer. Prefix matches tmux (C-t) so muscle
+# memory carries over; tmux uses catppuccin mocha, herdr's closest built-in
+# is "catppuccin" (dark).
+
+[theme]
+name = "catppuccin"
+
+[keys]
+prefix = "ctrl+t"
