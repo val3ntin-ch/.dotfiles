@@ -1,32 +1,32 @@
 [[plugin.deps]]
 use = "yazi-rs/plugins:git"
-rev = "39aaf6d"
-hash = "88e56a64b7ce7c4314427452343fef17"
+rev = "4dc7f1b"
+hash = "5bb0bfab901d3601c370eafdd66edd31"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:smart-filter"
-rev = "39aaf6d"
-hash = "c887903a63a2ff520081b6d90a4b3392"
+rev = "4dc7f1b"
+hash = "d6f7351ea25a43c9b5f4315fa1e23935"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:jump-to-char"
-rev = "39aaf6d"
+rev = "4dc7f1b"
 hash = "7a4b4237223aaa94e589d1c01a23542a"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:chmod"
-rev = "39aaf6d"
-hash = "f0c8c378184d5f8abd1b095a443d336d"
+rev = "4dc7f1b"
+hash = "87472b05a8c420100f6a2b9cde1e7746"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:diff"
-rev = "39aaf6d"
-hash = "8b1af6b5a69797ee951f2a80ce570818"
+rev = "4dc7f1b"
+hash = "14558d2829c0aa05e99c57de8f74d199"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:mime-ext"
-rev = "39aaf6d"
-hash = "2678c84a0b3a0b22504e918ccaf99011"
+rev = "4dc7f1b"
+hash = "3bcc00df11efc3ae5d15f2dba860be7"
 
 [flavor]
 deps = []
