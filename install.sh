@@ -78,7 +78,7 @@ chsh -s "$ZSH_PATH"
 step "Fish plugins"
 fish -c "
   curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-  fisher install
+  fisher update
 "
 
 # ── 9. Tmux plugins (TPM) ─────────────────────────────────────────────────────
