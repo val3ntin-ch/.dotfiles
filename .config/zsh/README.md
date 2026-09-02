@@ -693,6 +693,18 @@ All functions live in `conf.d/functions.zsh` and `conf.d/git.zsh`.
 | `fts` | `fts` | Fuzzy tmux session switcher. Preview: windows in each session |
 | `tdev` | `tdev` or `tdev myproject` | Spawn structured session: window 1 = nvim, window 2 = split panes |
 
+### Nvim / plugin updates
+
+| Function | Usage | What it does |
+|---|---|---|
+| `nvimupdate` | `nvimupdate` | `:Lazy! sync` headless → latest LazyVim/plugins, then reminds you to commit `lazy-lock.json` if it changed |
+
+`lazy-lock.json` is committed on purpose — it pins every machine to the exact
+plugin commits that were last tested, so a fresh clone never silently picks up
+a breaking upstream change. Run `nvimupdate` when you want the latest
+LazyVim/plugins on purpose, then commit the lock file to roll that update out
+to your other machine.
+
 ### Node / JS
 
 | Function | Usage | What it does |

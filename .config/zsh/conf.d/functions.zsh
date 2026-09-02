@@ -342,6 +342,21 @@ tdev() {
 }
 
 # ══════════════════════════════════════════════════════════════════════════════
+# NVIM / PLUGIN UPDATE FUNCTIONS
+# ══════════════════════════════════════════════════════════════════════════════
+
+# nvimupdate — pull latest LazyVim/plugins, then remind to commit the lock file
+nvimupdate() {
+  nvim --headless "+Lazy! sync" +qa
+  if ! git -C ~/.dotfiles diff --quiet -- .config/nvim/lazy-lock.json; then
+    echo "lazy-lock.json changed — commit it to sync this update to other machines:"
+    echo "  cd ~/.dotfiles && git add .config/nvim/lazy-lock.json && git commit -m 'chore(nvim): update plugins'"
+  else
+    echo "lazy-lock.json unchanged — already on latest"
+  fi
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
 # NODE / JS FUNCTIONS
 # ══════════════════════════════════════════════════════════════════════════════
 

@@ -97,6 +97,13 @@ eval "$(fnm env --log-level quiet)"
 fnm install --lts
 npm install -g neovim tree-sitter-cli
 
+# ── 11. Yazi plugins ───────────────────────────────────────────────────────────
+step "Yazi plugins"
+# `upgrade` (not `install`) so pinned plugin revs in package.toml always sync to
+# whatever yazi version brew just installed — a stale pinned rev vs. a newer yazi
+# core is exactly what broke plugin loading last time (yazi's plugin API moved).
+(cd "$HOME/.config/yazi" && ya pkg upgrade)
+
 printf '\n\033[1;32m✓ Done. Open a new terminal — zsh is your default shell.\033[0m\n'
 printf '  Next steps:\n'
 printf '    1. Set git identity (once per machine):\n'
@@ -107,4 +114,5 @@ printf '           email = you@example.com\n'
 printf '       EOF\n'
 printf '    2. nvim                  → first launch installs all plugins (~2-5 min)\n'
 printf '    3. :LazyHealth           → verify everything is working\n'
-printf '    4. ya pkg install        → install yazi plugins (optional)\n\n'
+printf '    4. If `ya pkg upgrade` above changed package.toml, commit it —\n'
+printf '       keeps other machines in sync with the plugin revs that just worked.\n\n'
