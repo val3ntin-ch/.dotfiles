@@ -102,7 +102,9 @@ step "Yazi plugins"
 # `upgrade` (not `install`) so pinned plugin revs in package.toml always sync to
 # whatever yazi version brew just installed — a stale pinned rev vs. a newer yazi
 # core is exactly what broke plugin loading last time (yazi's plugin API moved).
-(cd "$HOME/.config/yazi" && ya pkg upgrade)
+# --discard: plugins/ is pure upstream cache, never hand-edited — any local diff
+# (partial upgrade, prior manual `rm -rf` fix) should never block this from running.
+(cd "$HOME/.config/yazi" && ya pkg upgrade --discard)
 
 printf '\n\033[1;32m✓ Done. Open a new terminal — zsh is your default shell.\033[0m\n'
 printf '  Next steps:\n'

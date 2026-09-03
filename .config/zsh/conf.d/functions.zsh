@@ -356,6 +356,19 @@ nvimupdate() {
   fi
 }
 
+# yaziupdate — pull latest yazi plugin revs, then remind to commit package.toml
+# --discard: plugins/ is pure upstream cache, never hand-edited — any local diff
+# from a prior partial/manual fix should never block this.
+yaziupdate() {
+  (cd ~/.config/yazi && ya pkg upgrade --discard)
+  if ! git -C ~/.dotfiles diff --quiet -- .config/yazi/package.toml; then
+    echo "package.toml changed — commit it to sync this update to other machines:"
+    echo "  cd ~/.dotfiles && git add .config/yazi/package.toml && git commit -m 'chore(yazi): update plugins'"
+  else
+    echo "package.toml unchanged — already on latest"
+  fi
+}
+
 # ══════════════════════════════════════════════════════════════════════════════
 # NODE / JS FUNCTIONS
 # ══════════════════════════════════════════════════════════════════════════════
