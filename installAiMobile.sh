@@ -8,23 +8,13 @@ step() { printf '\n\033[1;36m==> %s\033[0m\n' "$1"; }
 # strict superset — one list to maintain, no drift between the two scripts.
 "$DOTFILES/installAi.sh"
 
-step "React Native marketplace"
-claude plugin marketplace add callstackincubator/agent-skills || true
-
-step "React Native plugins"
-# NOTE: callstack renamed these upstream at some point — the marketplace now
-# ships building-react-native-apps / testing-react-native-apps /
-# migrating-to-react-native, not the old react-native-best-practices / github
-# names. If this ever fails with "not found in marketplace" again, check
-# ~/.claude/plugins/marketplaces/callstack-agent-skills/.claude-plugin/marketplace.json
-# for the current plugin names before assuming it's a fluke.
-CLAUDE_MOBILE_PLUGINS=(
-  building-react-native-apps@callstack-agent-skills
-  testing-react-native-apps@callstack-agent-skills
-  migrating-to-react-native@callstack-agent-skills
-)
-for plugin in "${CLAUDE_MOBILE_PLUGINS[@]}"; do
-  claude plugin install "$plugin" -y || true
-done
+step "React Native skills"
+# Installed directly via the `skills` CLI, not `claude plugin install` — the
+# marketplace plugin names kept breaking across upstream renames
+# (react-native-best-practices/github -> building-react-native-apps/
+# testing-react-native-apps, etc). Installing skills by their actual repo
+# path instead of a marketplace-plugin alias sidesteps that entirely.
+# Must run from $HOME — see installAi.sh's skills step for why.
+(cd "$HOME" && npx skills@latest add callstackincubator/agent-skills --skill '*')
 
 printf '\n\033[1;32m✓ Web + React Native Claude skillset installed.\033[0m\n'
