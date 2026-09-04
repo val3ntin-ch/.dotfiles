@@ -107,50 +107,6 @@ step "Yazi plugins"
 # (partial upgrade, prior manual `rm -rf` fix) should never block this from running.
 (cd "$HOME/.config/yazi" && ya pkg upgrade --discard)
 
-# ── 12. Claude Code marketplaces + plugins ────────────────────────────────────
-step "Claude Code marketplaces + plugins"
-# claude-plugins-official ships built in — only third-party marketplaces need
-# registering. `add` on an already-known marketplace is a harmless no-op, so
-# this is safe to rerun.
-CLAUDE_MARKETPLACES=(
-  "last30days-skill:mvanhorn/last30days-skill"
-  "caveman:JuliusBrussee/caveman"
-  "karpathy-skills:forrestchang/andrej-karpathy-skills"
-  "callstack-agent-skills:callstackincubator/agent-skills"
-)
-for entry in "${CLAUDE_MARKETPLACES[@]}"; do
-  claude plugin marketplace add "${entry#*:}" || true
-done
-
-CLAUDE_PLUGINS=(
-  andrej-karpathy-skills@karpathy-skills
-  caveman@caveman
-  claude-code-setup@claude-plugins-official
-  code-review@claude-plugins-official
-  context7@claude-plugins-official
-  figma@claude-plugins-official
-  frontend-design@claude-plugins-official
-  github@callstack-agent-skills
-  last30days@last30days-skill
-  lua-lsp@claude-plugins-official
-  playwright@claude-plugins-official
-  react-native-best-practices@callstack-agent-skills
-  security-guidance@claude-plugins-official
-  supabase@claude-plugins-official
-  superpowers@claude-plugins-official
-  typescript-lsp@claude-plugins-official
-)
-for plugin in "${CLAUDE_PLUGINS[@]}"; do
-  claude plugin install "$plugin" -y || true
-done
-
-# skills installed directly via the `skills` CLI (not a marketplace plugin).
-# Must run from $HOME — the CLI installs into ./.agents/skills relative to
-# cwd, and install.sh's cwd is wherever it was invoked from (typically this
-# repo), which would wrongly nest a copy inside the dotfiles checkout.
-(cd "$HOME" && npx --yes skills add https://github.com/vercel-labs/agent-skills --skill vercel-react-best-practices)
-(cd "$HOME" && npx --yes skills add https://github.com/vercel-labs/agent-skills --skill vercel-composition-patterns)
-
 printf '\n\033[1;32m✓ Done. Open a new terminal — zsh is your default shell.\033[0m\n'
 printf '  Next steps:\n'
 printf '    1. Set git identity (once per machine):\n'
@@ -162,4 +118,8 @@ printf '       EOF\n'
 printf '    2. nvim                  → first launch installs all plugins (~2-5 min)\n'
 printf '    3. :LazyHealth           → verify everything is working\n'
 printf '    4. If `ya pkg upgrade` above changed package.toml, commit it —\n'
-printf '       keeps other machines in sync with the plugin revs that just worked.\n\n'
+printf '       keeps other machines in sync with the plugin revs that just worked.\n'
+printf '    5. Claude Code marketplaces/plugins/skills are NOT installed by this\n'
+printf '       script — run one of:\n'
+printf '         ./installAi.sh        (web-only skillset)\n'
+printf '         ./installAiMobile.sh  (web + React Native skillset)\n\n'
