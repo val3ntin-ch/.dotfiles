@@ -144,6 +144,12 @@ for plugin in "${CLAUDE_PLUGINS[@]}"; do
   claude plugin install "$plugin" -y || true
 done
 
+# skills installed directly via the `skills` CLI (not a marketplace plugin).
+# Must run from $HOME — the CLI installs into ./.agents/skills relative to
+# cwd, and install.sh's cwd is wherever it was invoked from (typically this
+# repo), which would wrongly nest a copy inside the dotfiles checkout.
+(cd "$HOME" && npx --yes skills add https://github.com/vercel-labs/agent-skills --skill vercel-react-best-practices)
+
 printf '\n\033[1;32m✓ Done. Open a new terminal — zsh is your default shell.\033[0m\n'
 printf '  Next steps:\n'
 printf '    1. Set git identity (once per machine):\n'
