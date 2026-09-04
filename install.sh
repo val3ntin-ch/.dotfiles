@@ -149,6 +149,7 @@ done
 # cwd, and install.sh's cwd is wherever it was invoked from (typically this
 # repo), which would wrongly nest a copy inside the dotfiles checkout.
 (cd "$HOME" && npx --yes skills add https://github.com/vercel-labs/agent-skills --skill vercel-react-best-practices)
+(cd "$HOME" && npx --yes skills add https://github.com/vercel-labs/agent-skills --skill vercel-composition-patterns)
 
 printf '\n\033[1;32m✓ Done. Open a new terminal — zsh is your default shell.\033[0m\n'
 printf '  Next steps:\n'
