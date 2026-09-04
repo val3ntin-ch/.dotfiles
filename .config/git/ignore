@@ -1,4 +1,6 @@
 **/.claude/settings.local.json
+.agents/
+skills-lock.json
 .DS_Store
 .DS_Store?
 ._*
