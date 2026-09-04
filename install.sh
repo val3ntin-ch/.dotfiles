@@ -107,6 +107,43 @@ step "Yazi plugins"
 # (partial upgrade, prior manual `rm -rf` fix) should never block this from running.
 (cd "$HOME/.config/yazi" && ya pkg upgrade --discard)
 
+# ── 12. Claude Code marketplaces + plugins ────────────────────────────────────
+step "Claude Code marketplaces + plugins"
+# claude-plugins-official ships built in — only third-party marketplaces need
+# registering. `add` on an already-known marketplace is a harmless no-op, so
+# this is safe to rerun.
+CLAUDE_MARKETPLACES=(
+  "last30days-skill:mvanhorn/last30days-skill"
+  "caveman:JuliusBrussee/caveman"
+  "karpathy-skills:forrestchang/andrej-karpathy-skills"
+  "callstack-agent-skills:callstackincubator/agent-skills"
+)
+for entry in "${CLAUDE_MARKETPLACES[@]}"; do
+  claude plugin marketplace add "${entry#*:}" || true
+done
+
+CLAUDE_PLUGINS=(
+  andrej-karpathy-skills@karpathy-skills
+  caveman@caveman
+  claude-code-setup@claude-plugins-official
+  code-review@claude-plugins-official
+  context7@claude-plugins-official
+  figma@claude-plugins-official
+  frontend-design@claude-plugins-official
+  github@callstack-agent-skills
+  last30days@last30days-skill
+  lua-lsp@claude-plugins-official
+  playwright@claude-plugins-official
+  react-native-best-practices@callstack-agent-skills
+  security-guidance@claude-plugins-official
+  supabase@claude-plugins-official
+  superpowers@claude-plugins-official
+  typescript-lsp@claude-plugins-official
+)
+for plugin in "${CLAUDE_PLUGINS[@]}"; do
+  claude plugin install "$plugin" -y || true
+done
+
 printf '\n\033[1;32m✓ Done. Open a new terminal — zsh is your default shell.\033[0m\n'
 printf '  Next steps:\n'
 printf '    1. Set git identity (once per machine):\n'
