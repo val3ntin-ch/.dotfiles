@@ -1,0 +1,51 @@
+{
+  "React Arrow Function Component Export": {
+    "prefix": "rafce",
+    "body": [
+      "import React from 'react'",
+      "",
+      "const ${1:${TM_FILENAME_BASE}} = ({ $2 }) => {",
+      "  return (",
+      "    <div>$0</div>",
+      "  )",
+      "}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "React arrow function component + default export"
+  },
+  "React Native Functional Component Export": {
+    "prefix": "rnfe",
+    "body": [
+      "import React from 'react'",
+      "import { StyleSheet, View, Text } from 'react-native'",
+      "",
+      "const ${1:${TM_FILENAME_BASE}} = ({ $2 }) => {",
+      "  return (",
+      "    <View style={styles.container}>",
+      "      <Text>$0</Text>",
+      "    </View>",
+      "  )",
+      "}",
+      "",
+      "const styles = StyleSheet.create({",
+      "  container: {",
+      "    flex: 1,",
+      "  },",
+      "})",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "React Native functional component with StyleSheet boilerplate + default export"
+  },
+  "useState Hook": {
+    "prefix": "us",
+    "body": ["const [${1:state}, set${1/(.*)/${1:/capitalize}/}] = useState(${2:initialValue})"],
+    "description": "useState hook"
+  },
+  "useEffect Hook": {
+    "prefix": "ue",
+    "body": ["useEffect(() => {", "  $1", "}, [$2])"],
+    "description": "useEffect hook"
+  }
+}

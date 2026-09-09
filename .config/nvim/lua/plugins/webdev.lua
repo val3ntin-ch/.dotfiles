@@ -96,6 +96,27 @@ return {
     },
   },
 
+  -- friendly-snippets registers JS/TS snippets under "javascript"/"typescript"
+  -- only — without this, jsx/tsx get zero snippet completions since blink.cmp
+  -- doesn't know javascriptreact/typescriptreact should inherit them.
+  {
+    "saghen/blink.cmp",
+    opts = {
+      sources = {
+        providers = {
+          snippets = {
+            opts = {
+              extended_filetypes = {
+                javascriptreact = { "javascript" },
+                typescriptreact = { "typescript" },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+
   -- Jest adapter for neotest (test.core extra provides the framework)
   {
     "nvim-neotest/neotest",

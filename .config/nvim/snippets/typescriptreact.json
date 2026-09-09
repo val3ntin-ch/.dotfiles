@@ -1,0 +1,69 @@
+{
+  "React Arrow Function Component Export": {
+    "prefix": "rafce",
+    "body": [
+      "import { FC } from 'react'",
+      "",
+      "interface ${1:${TM_FILENAME_BASE}}Props {",
+      "  $2",
+      "}",
+      "",
+      "const ${1:${TM_FILENAME_BASE}}: FC<${1:${TM_FILENAME_BASE}}Props> = ({ $3 }) => {",
+      "  return (",
+      "    <div>$0</div>",
+      "  )",
+      "}",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "React arrow function component with props interface + default export"
+  },
+  "React Native Functional Component Export": {
+    "prefix": "rnfe",
+    "body": [
+      "import { FC } from 'react'",
+      "import { StyleSheet, View, Text } from 'react-native'",
+      "",
+      "interface ${1:${TM_FILENAME_BASE}}Props {",
+      "  $2",
+      "}",
+      "",
+      "const ${1:${TM_FILENAME_BASE}}: FC<${1:${TM_FILENAME_BASE}}Props> = ({ $3 }) => {",
+      "  return (",
+      "    <View style={styles.container}>",
+      "      <Text>$0</Text>",
+      "    </View>",
+      "  )",
+      "}",
+      "",
+      "const styles = StyleSheet.create({",
+      "  container: {",
+      "    flex: 1,",
+      "  },",
+      "})",
+      "",
+      "export default ${1:${TM_FILENAME_BASE}}"
+    ],
+    "description": "React Native functional component with StyleSheet boilerplate + default export"
+  },
+  "useState Hook": {
+    "prefix": "us",
+    "body": ["const [${1:state}, set${1/(.*)/${1:/capitalize}/}] = useState(${2:initialValue})"],
+    "description": "useState hook"
+  },
+  "useEffect Hook": {
+    "prefix": "ue",
+    "body": ["useEffect(() => {", "  $1", "}, [$2])"],
+    "description": "useEffect hook"
+  },
+  "useCallback Hook": {
+    "prefix": "ucb",
+    "body": ["const ${1:handler} = useCallback(($2) => {", "  $3", "}, [$4])"],
+    "description": "useCallback hook"
+  },
+  "useMemo Hook": {
+    "prefix": "um",
+    "body": ["const ${1:value} = useMemo(() => {", "  return $2", "}, [$3])"],
+    "description": "useMemo hook"
+  }
+}
