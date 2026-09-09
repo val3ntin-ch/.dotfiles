@@ -40,7 +40,14 @@ return {
   },
   {
     "LazyVim/LazyVim",
-    opts = { colorscheme = "catppuccin" },
+    opts = {
+      colorscheme = "catppuccin",
+      -- off by default: neovim core has an unfixed crash where a stale
+      -- inlay-hint column (from a semantic-tokens refresh racing a buffer
+      -- edit) throws "Invalid 'col': out of range" (nvim/neovim#39772),
+      -- reproduced on stable 0.12.5. Toggle on with <leader>uh when wanted.
+      inlay_hints = { enabled = false },
+    },
   },
 
   -- seamless navigation between tmux panes and nvim splits (Ctrl+h/j/k/l)
