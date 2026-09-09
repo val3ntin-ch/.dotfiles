@@ -130,20 +130,30 @@ return {
     dependencies = { "nvim-neotest/neotest-jest" },
     opts = {
       adapters = {
-        ["neotest-jest"] = {
-          jestCommand = "npx jest",
-          jestConfigFile = function()
-            local file = vim.fn.expand("%:p")
+        ["neotest-jest"] = (function()
+          -- monorepo package root (packages/<name>/) for the current file,
+          -- or nil outside that layout. cwd() MUST use this too — npx jest
+          -- run from the monorepo root instead of the package dir throws
+          -- "cannot read package.json" whenever root has none of its own.
+          local function package_root(file)
             if string.find(file, "/packages/") then
-              return string.match(file, "(.-/[^/]+/)src") .. "jest.config.ts"
+              return string.match(file, "(.-/[^/]+/)src")
             end
-            return vim.fn.getcwd() .. "/jest.config.ts"
-          end,
-          env = { CI = true },
-          cwd = function()
-            return vim.fn.getcwd()
-          end,
-        },
+            return nil
+          end
+          return {
+            jestCommand = "npx jest",
+            jestConfigFile = function()
+              local root = package_root(vim.fn.expand("%:p"))
+              return (root or (vim.fn.getcwd() .. "/")) .. "jest.config.ts"
+            end,
+            env = { CI = true },
+            cwd = function()
+              local root = package_root(vim.fn.expand("%:p"))
+              return root or vim.fn.getcwd()
+            end,
+          }
+        end)(),
       },
     },
   },
