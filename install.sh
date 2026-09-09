@@ -28,6 +28,11 @@ brew install \
   stow tmux vivid ouch bat eza fnm pnpm yarn go pyenv rbenv \
   tree-sitter watchman node herdr
 brew install --cask claude-code
+# `install` is a no-op on a machine that already has an older neovim — force
+# it current every run. Real motivation: hit a neovim-core inlay-hint crash
+# (nvim/neovim#39772, fixed upstream) that only reproduced on a stale 0.12.5;
+# staying current avoids landing on a version with a known-fixed bug.
+brew upgrade neovim || true
 
 # ── 3. Yazi + required dependencies ──────────────────────────────────────────
 step "Yazi + dependencies"
