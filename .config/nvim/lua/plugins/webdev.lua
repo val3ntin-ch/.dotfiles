@@ -92,12 +92,10 @@ return {
         cssls = {},
         html = {},
         graphql = {},
+        -- js/ts/jsx/tsx removed: emmet treats nearly any keystroke as a
+        -- possible abbreviation, flooding every JS/TS completion with tags.
         emmet_ls = {
-          filetypes = {
-            "html", "css", "scss",
-            "javascript", "javascriptreact",
-            "typescript", "typescriptreact",
-          },
+          filetypes = { "html", "css", "scss" },
         },
       },
     },
