@@ -301,24 +301,45 @@ fts() {
 #
 # Usage: tdev (uses cwd), tdev myproject (resolves via zoxide), tdev ./path
 tdev() {
-  local name root
+  local name root auto_derived
   name="$(basename "$PWD")"
   root="$PWD"
+  # true when name/root came from a resolved path (0 args, a dir arg, or a
+  # zoxide hit) rather than a literal name the user typed on purpose
+  auto_derived=true
   if [[ $# -ge 2 ]]; then
     name="$1"
     root="$2"
+    auto_derived=false
   elif [[ $# -eq 1 ]]; then
     if [[ -d "$1" ]]; then
       # arg is a path — use it directly
       root="$(realpath "$1")"
+      name="$(basename "$root")"
     else
       # resolve project path via zoxide (like `z <name>`)
       local zdir
       zdir="$(zoxide query "$1" 2>/dev/null)"
-      [[ -n "$zdir" ]] && root="$zdir"
+      if [[ -n "$zdir" ]]; then
+        root="$zdir"
+        name="$(basename "$root")"
+      else
+        name="$1"
+        auto_derived=false
+      fi
     fi
-    name="$(basename "$root")"
   fi
+
+  if [[ "$auto_derived" == true ]]; then
+    # disambiguate folders that share a basename under different parents
+    # (e.g. two repos each with a "mobile/" dir) — without this, tdev would
+    # find the OTHER project's session already running under the same short
+    # name and switch you into it instead of making a new one
+    local hash
+    hash="$(echo -n "$root" | md5sum | cut -c1-6)"
+    name="${name}-${hash}"
+  fi
+
   # tmux session names can't contain . or : (target separators)
   name="${name//./_}"
 

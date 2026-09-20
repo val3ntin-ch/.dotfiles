@@ -1,20 +1,41 @@
 function tdev -d "Create structured tmux dev session: nvim 70% + terminal 30%"
     set -l name (basename $PWD)
-    test (count $argv) -ge 1; and set name $argv[1]
     set -l root $PWD
+    # true when name/root came from a resolved path (0 args, a dir arg, or a
+    # zoxide hit) rather than a literal name the user typed on purpose
+    set -l auto_derived true
+
     if test (count $argv) -ge 2
+        set name $argv[1]
         set root $argv[2]
+        set auto_derived false
     else if test (count $argv) -eq 1
         if test -d $argv[1]
             # arg is a path — use it directly
             set root (realpath $argv[1])
+            set name (basename $root)
         else
             # resolve project path via zoxide (like `z <name>`)
             set -l zdir (zoxide query $argv[1] 2>/dev/null)
-            test -n "$zdir"; and set root $zdir
+            if test -n "$zdir"
+                set root $zdir
+                set name (basename $root)
+            else
+                set name $argv[1]
+                set auto_derived false
+            end
         end
-        set name (basename $root)
     end
+
+    if test "$auto_derived" = true
+        # disambiguate folders that share a basename under different parents
+        # (e.g. two repos each with a "mobile/" dir) — without this, `tdev`
+        # would find the OTHER project's session already running under the
+        # same short name and switch you into it instead of making a new one
+        set -l hash (string sub -l 6 (echo -n $root | md5sum | string split ' ')[1])
+        set name "$name-$hash"
+    end
+
     # tmux session names can't contain . or : (target separators)
     set name (string replace -a . _ $name)
 
