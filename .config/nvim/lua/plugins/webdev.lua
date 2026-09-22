@@ -33,6 +33,12 @@ return {
             information = { "undercurl" },
           },
         },
+        -- Snacks renders the file-move/rename input box and other floating
+        -- prompts (vim.ui.input, notifications, etc). Without this,
+        -- catppuccin never themes those windows — they fall back to
+        -- unstyled defaults, which is why the rename box text was
+        -- unreadable (dark text on a dark, un-catppuccin'd background).
+        snacks = true,
         treesitter = true,
         which_key = true,
       },
