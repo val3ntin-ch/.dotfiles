@@ -34,12 +34,10 @@ return {
           },
         },
         -- Snacks renders the file-move/rename input box and other floating
-        -- prompts (vim.ui.input, notifications, etc). This themes Snacks'
-        -- dashboard/notifier/general windows, but NOT the input box
-        -- specifically — catppuccin's own snacks integration never defines
-        -- SnacksInput* groups at all (confirmed by reading its source).
-        -- Fixed in config/autocmds.lua — see the comment there for why it's
-        -- not handled here via custom_highlights/config().
+        -- prompts (vim.ui.input, notifications, etc). Without this,
+        -- catppuccin never themes those windows — they fall back to
+        -- unstyled defaults, which is why the rename box text was
+        -- unreadable (dark text on a dark, un-catppuccin'd background).
         snacks = true,
         treesitter = true,
         which_key = true,
