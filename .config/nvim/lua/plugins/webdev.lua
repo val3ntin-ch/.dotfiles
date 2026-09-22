@@ -39,9 +39,15 @@ return {
     },
   },
   {
+    "navarasu/onedark.nvim",
+    priority = 1000,
+    opts = { style = "deep" },
+  },
+
+  {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "catppuccin",
+      colorscheme = "onedark",
       -- off by default: neovim core has an unfixed crash where a stale
       -- inlay-hint column (from a semantic-tokens refresh racing a buffer
       -- edit) throws "Invalid 'col': out of range" (nvim/neovim#39772),
