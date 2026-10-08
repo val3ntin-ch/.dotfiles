@@ -2,7 +2,8 @@
 set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-step() { printf '\n\033[1;36m==> %s\033[0m\n' "$1"; }
+# shellcheck source=lib/install-common.sh
+source "$DOTFILES/lib/install-common.sh"
 
 # ── 0. Xcode CLI tools (C compiler for nvim-treesitter) ──────────────────────
 # Install if missing AND update if outdated — Homebrew refuses to build with
@@ -91,87 +92,18 @@ step "Ghostty + fonts"
 brew install --cask ghostty font-jetbrains-mono-nerd-font font-symbols-only-nerd-font
 
 # ── 6. Stow dotfiles ──────────────────────────────────────────────────────────
-step "Stowing dotfiles"
-# back up any real dirs that would conflict with stow symlinks
-[[ -d "$HOME/.config/nvim" && ! -L "$HOME/.config/nvim" ]] && mv "$HOME/.config/nvim" "$HOME/.config/nvim.bak"
-# back up any real files where stow needs a symlink (e.g. app-created
-# ~/.config/git/ignore or ~/.config/lazygit/config.yml) — otherwise stow
-# aborts the whole run with a conflict
-(cd "$DOTFILES" && git ls-files -- .config .zshenv) | while IFS= read -r f; do
-  target="$HOME/$f"
-  # skip if missing, a symlink, or already resolving into the repo
-  # (folded stow dirs make repo files look like real files at $HOME)
-  [[ -e "$target" && ! -L "$target" ]] || continue
-  [[ "$(realpath "$target")" == "$DOTFILES"/* ]] && continue
-  mv "$target" "$target.bak"
-  echo "  conflict backed up: $target → $target.bak"
-done
-# ensure runtime dirs exist before first use
-mkdir -p \
-  "$HOME/.local/state/less" \
-  "$HOME/.local/state/zsh" \
-  "$HOME/.local/share/zsh" \
-  "$HOME/.cache/zsh" \
-  "$HOME/.config/git"
-(cd "$DOTFILES" && stow --target="$HOME" --restow .)
+stow_dotfiles
 
 # ── 7. Default shell → fish ───────────────────────────────────────────────────
 # zsh stays installed and configured; switch back with LOGIN_SHELL=zsh ./install.sh
 LOGIN_SHELL="${LOGIN_SHELL:-fish}"
-step "Default shell → $LOGIN_SHELL"
-SHELL_PATH="$(brew --prefix)/bin/$LOGIN_SHELL"
-grep -qF "$SHELL_PATH" /etc/shells || echo "$SHELL_PATH" | sudo tee -a /etc/shells
-# chsh always prompts for the password — skip it when already the login shell
-if [[ "$(dscl . -read "$HOME" UserShell | awk '{print $2}')" != "$SHELL_PATH" ]]; then
-  chsh -s "$SHELL_PATH"
-else
-  echo "  already $LOGIN_SHELL"
-fi
+# brew's copy, not /bin/zsh — macOS ships an older zsh earlier on some PATHs
+set_login_shell "$LOGIN_SHELL" "$(brew --prefix)/bin/$LOGIN_SHELL"
 
-# ── 8. Fish plugins ───────────────────────────────────────────────────────────
-step "Fish plugins"
-fish -c "
-  curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-  fisher update
-"
+# ── 8-11. Fish plugins · herdr integrations · Node LTS · Yazi plugins ────────
+fish_plugins
+herdr_integrations
+node_lts
+yazi_plugins
 
-# ── 9. Herdr agent integrations ───────────────────────────────────────────────
-step "Herdr agent integrations"
-# hooks that report each agent's state (working / waiting / done) to herdr's
-# sidebar — idempotent, rewrites to the current version on rerun
-for agent in claude codex opencode; do
-  herdr integration install "$agent"
-done
-
-# ── 10. Node LTS ──────────────────────────────────────────────────────────────
-step "Node LTS"
-eval "$(fnm env --log-level quiet)"
-fnm install --lts
-npm install -g neovim tree-sitter-cli
-
-# ── 11. Yazi plugins ───────────────────────────────────────────────────────────
-step "Yazi plugins"
-# `upgrade` (not `install`) so pinned plugin revs in package.toml always sync to
-# whatever yazi version brew just installed — a stale pinned rev vs. a newer yazi
-# core is exactly what broke plugin loading last time (yazi's plugin API moved).
-# --discard: plugins/ is pure upstream cache, never hand-edited — any local diff
-# (partial upgrade, prior manual `rm -rf` fix) should never block this from running.
-(cd "$HOME/.config/yazi" && ya pkg upgrade --discard)
-
-printf '\n\033[1;32m✓ Done. Open a new terminal — fish is your default shell.\033[0m\n'
-printf '  Next steps:\n'
-printf '    1. Set git identity (once per machine):\n'
-printf '       cat > ~/.config/git/config.local <<EOF\n'
-printf '       [user]\n'
-printf '           name  = Your Name\n'
-printf '           email = you@example.com\n'
-printf '       EOF\n'
-printf '    2. nvim                  → first launch installs all plugins (~2-5 min)\n'
-printf '    3. :LazyHealth           → verify everything is working\n'
-printf '    4. If `ya pkg upgrade` above changed package.toml, commit it —\n'
-printf '       keeps other machines in sync with the plugin revs that just worked.\n'
-printf '    5. Log in once: gh auth login · claude · codex · opencode auth login\n'
-printf '    6. Agent plugins/skills + agent configs (telemetry off) — run one of:\n'
-printf '         ./installAi.sh        (web-only skillset)\n'
-printf '         ./installAiMobile.sh  (web + React Native skillset)\n'
-printf '    7. herdr                 → then `hdev <project>` (agent; add -e for nvim)\n\n'
+next_steps

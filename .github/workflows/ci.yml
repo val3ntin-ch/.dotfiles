@@ -36,3 +36,42 @@ jobs:
       - name: Run checks
         run: .github/check.sh
 
+
+  linux-install:
+    # installLinux.sh end to end on each distro family, twice (rerun must be safe)
+    name: linux-install (${{ matrix.distro }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: ["ubuntu:24.04", "fedora:latest", "archlinux:latest"]
+    container: ${{ matrix.distro }}
+    env:
+      LOGIN_SHELL: none
+      DESKTOP: "0"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      # git must exist before checkout, or the action downloads a tarball with
+      # no .git — the installer stows from `git ls-files` (a real clone has it)
+      - name: Git for checkout
+        run: |
+          if command -v apt-get >/dev/null; then apt-get update -qq && apt-get install -y -qq git ca-certificates
+          elif command -v dnf >/dev/null; then dnf install -y -q git
+          elif command -v pacman >/dev/null; then pacman -Sy --noconfirm --needed git
+          fi
+
+      - uses: actions/checkout@v4
+
+      # workspace is owned by the runner user, the container runs as root
+      - name: Trust workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Install (first run)
+        run: bash ./installLinux.sh
+
+      - name: Install (rerun)
+        run: bash ./installLinux.sh
+
+      - name: Verify
+        run: bash .github/check-linux-install.sh

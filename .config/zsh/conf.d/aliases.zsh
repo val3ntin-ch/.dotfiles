@@ -418,7 +418,7 @@ alias -g T='| tail'                              # pipe to tail
 alias -g TF='| tail -f'                          # follow (like tail -f)
 alias -g WC='| wc -l'                            # count lines
 alias -g JSON='| python3 -m json.tool'           # pretty-print JSON
-alias -g COPY='| pbcopy'                         # copy to clipboard (macOS)
+alias -g COPY='| copy'                           # copy to clipboard (copy alias above: pbcopy / wl-copy / xclip)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PLATFORM-SPECIFIC

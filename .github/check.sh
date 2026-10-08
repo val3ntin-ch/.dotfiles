@@ -74,7 +74,7 @@ rm -rf "$TMP_HOME/.config/herdr"
 
 section "Stow into a fresh HOME"
 if stow --target="$TMP_HOME" --restow . 2>&1; then
-  for p in agents install.sh installAi.sh installAiMobile.sh .github README.md; do
+  for p in agents lib install.sh installLinux.sh installAi.sh installAiMobile.sh .github README.md; do
     [[ -e "$TMP_HOME/$p" ]] && fail "stow leaked repo-only path into HOME: $p"
   done
   [[ -L "$TMP_HOME/.zshenv" ]] || fail "stow did not link ~/.zshenv"

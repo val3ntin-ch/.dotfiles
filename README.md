@@ -1,11 +1,12 @@
 # .dotfiles
 
-Personal terminal setup for macOS — one script from zero to fully configured shell.
+Personal terminal setup for macOS and Linux — one script from zero to fully configured shell.
 
 ## Table of contents
 
 - [Install](#install)
 - [What install.sh does](#what-installsh-does)
+- [Linux](#linux)
 - [Structure](#structure)
 - [Installed tools](#installed-tools)
 - [Day-to-day](#day-to-day)
@@ -14,7 +15,8 @@ Personal terminal setup for macOS — one script from zero to fully configured s
 
 ## Install
 
-> macOS only. Requires an internet connection.
+> macOS: `install.sh`. Linux: `installLinux.sh` (see [Linux](#linux)).
+> Requires an internet connection.
 
 ```bash
 # 1. clone the repo into ~/.dotfiles
@@ -71,12 +73,63 @@ nvim
 
 ---
 
+## Linux
+
+```bash
+git clone https://github.com/val3ntin-ch/.dotfiles ~/.dotfiles
+~/.dotfiles/installLinux.sh
+~/.dotfiles/installAi.sh        # same AI script as macOS
+```
+
+Works on any distro family with **apt** (Debian, Ubuntu, Mint, Pop!_OS),
+**dnf** (Fedora, RHEL, Alma, Rocky), or **pacman** (Arch, Manjaro, EndeavourOS), on x86_64 and aarch64. CI installs it on Ubuntu
+24.04, Fedora and Arch on every PR.
+
+How it gets each tool:
+
+1. **Native packages first** (apt/dnf/pacman) — names are mapped per
+   distro; a name the distro doesn't have is skipped, not fatal.
+2. **Upstream fallback** for anything missing or too old, into `~/.local/bin`:
+   GitHub releases (lazygit, eza, delta, vivid, ouch, yazi, gh, zoxide, fzf,
+   resvg), neovim's release tarball when the distro's nvim is older than
+   0.11.2, fzf when older than 0.48 (`fzf --fish`), and the official installers
+   for starship, fnm, herdr, Claude Code and OpenCode. pyenv/rbenv are cloned.
+3. **npm (via fnm's Node LTS):** codex, pnpm, yarn, markdownlint-cli2,
+   neovim, tree-sitter-cli.
+4. **Desktop only** (auto-detected, or `DESKTOP=1`/`0`): Ghostty from the
+   official repos where it exists (Arch; elsewhere a link to
+   ghostty.org's install docs) and JetBrains Mono + Symbols Nerd Fonts into
+   `~/.local/share/fonts`.
+5. **Same shared steps as macOS** (`lib/install-common.sh`): stow, login
+   shell (`LOGIN_SHELL=fish|zsh|none`), fish plugins, herdr agent hooks, yazi
+   plugins.
+
+**Sources — official and public only:**
+
+| Kind | Where from |
+|---|---|
+| Distro packages | the distro's own official repos (no PPAs, COPRs, AUR or snaps) |
+| GitHub releases | the project's own upstream repo, **sha256-verified** against the digest GitHub publishes for each asset (mismatch or no published digest = refused): junegunn/fzf, jesseduffield/lazygit, eza-community/eza, dandavison/delta, sharkdp/vivid, ouch-org/ouch, sxyazi/yazi, cli/cli, ajeetdsouza/zoxide, linebender/resvg, neovim/neovim, ryanoasis/nerd-fonts |
+| Official install scripts | starship.rs, fnm.vercel.app, herdr.dev, claude.ai, opencode.ai (HTTPS, each project's documented installer) |
+| Git clones | pyenv/pyenv, rbenv/rbenv, rbenv/ruby-build |
+| npm registry | @openai/codex, pnpm, yarn, markdownlint-cli2, neovim, tree-sitter-cli |
+
+Ghostty is installed only where an official distro repo has it (Arch);
+elsewhere the script points to ghostty.org's install docs.
+
+Not on Linux: Conductor (macOS app), Homebrew. Debian/Ubuntu's `batcat` and
+`fdfind` are linked as `bat` and `fd`.
+
+---
+
 ## Structure
 
 ```
 ~/.dotfiles/
 ├── install.sh              macOS bootstrap script
-├── installAi.sh            agent plugins/skills + agent configs (web)
+├── installLinux.sh         Linux bootstrap (apt/dnf/pacman)
+├── lib/install-common.sh   steps shared by both installers (not stowed)
+├── installAi.sh            agent plugins/skills + agent configs (web) — macOS + Linux
 ├── installAiMobile.sh      installAi.sh + React Native skills
 ├── agents/                 Claude/Codex/OpenCode base configs (merged, not stowed)
 ├── .github/                CI workflow + check.sh (not stowed)
@@ -347,4 +400,9 @@ hardcoded home paths (`/Users/…`, `/home/…`), secrets in files and in the fu
 git history (gitleaks), `herdr config check`, stow into a fresh `$HOME`
 (nothing repo-only leaks), and that fresh
 zsh/fish login shells actually load the env (`EDITOR`, `DO_NOT_TRACK`).
+
+The `linux-install` CI job runs `installLinux.sh` twice (a rerun must be safe)
+in Ubuntu 24.04, Fedora and Arch containers, then `.github/check-linux-install.sh`:
+every tool on PATH, nvim ≥ 0.11.2, `fzf --fish`, the npm toolchain, `herdr
+config check`, stow links, and fresh zsh/fish login shells loading the env.
 

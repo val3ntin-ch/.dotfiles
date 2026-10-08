@@ -72,8 +72,9 @@ export PATH="$GOPATH/bin:$PATH"
 # ── Android SDK ────────────────────────────────────────────────────────────
 # Required for React Native Android development.
 # ANDROID_HOME points to the SDK root; platform-tools has adb, emulator has avd manager.
-if [[ -d "$HOME/Library/Android/sdk" ]]; then
-  export ANDROID_HOME="$HOME/Library/Android/sdk"
+if [[ -d "$HOME/Library/Android/sdk" || -d "$HOME/Android/Sdk" ]]; then
+  # macOS default, else Android Studio's Linux default
+  [[ -d "$HOME/Library/Android/sdk" ]] && export ANDROID_HOME="$HOME/Library/Android/sdk" || export ANDROID_HOME="$HOME/Android/Sdk"
   export PATH="$ANDROID_HOME/emulator:$PATH"
   export PATH="$ANDROID_HOME/platform-tools:$PATH"
 fi
