@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    # macOS: same BSD userland + Homebrew paths the dotfiles target
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install tools
+        env:
+          HOMEBREW_NO_INSTALL_CLEANUP: "1"
+          HOMEBREW_NO_ANALYTICS: "1"
+        # update first: the runner image's formula index lags (shipped herdr
+        # 0.8.2, which rejects config keys install.sh's current herdr accepts)
+        run: |
+          brew update
+          brew install fish zsh shellcheck lua stow gitleaks herdr fzf
+
+      - name: Run checks
+        run: .github/check.sh
+
+      - name: Secrets in commit history
+        run: gitleaks git . --no-banner --redact

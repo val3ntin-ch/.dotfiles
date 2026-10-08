@@ -26,8 +26,9 @@ git clone https://github.com/val3ntin-ch/.dotfiles ~/.dotfiles
 
 Open a new terminal when done. Fish is the default shell; zsh is fully configured too.
 
-> **Machine-specific config** (API keys, SDK paths, local tools) goes in  
-> `~/.config/zsh/.zshrc.local` — created manually per machine, never committed.
+> **Machine-specific config** (API keys, SDK paths, local tools) goes in
+> `~/.config/fish/config-local.fish` (fish) or `~/.config/zsh/.zshrc.local`
+> (zsh) — created manually per machine, gitignored, never committed.
 
 ---
 
@@ -46,6 +47,11 @@ Open a new terminal when done. Fish is the default shell; zsh is fully configure
 | 8 | Install fish plugins via Fisher |
 | 9 | Install herdr agent-state hooks for claude, codex, opencode |
 | 10 | Install Node LTS via fnm + global npm packages (neovim, tree-sitter-cli) |
+| 11 | Install/upgrade Yazi plugins (`ya pkg upgrade`) |
+
+Rerunning is safe: installed brew packages are skipped, `chsh` and the Xcode
+license only prompt when something changes. Then run `./installAi.sh` (or
+`./installAiMobile.sh`) for agent plugins, skills and agent configs.
 
 **After install — one-time per machine:**
 
@@ -71,7 +77,8 @@ nvim
 ├── installAi.sh            agent plugins/skills + agent configs (web)
 ├── installAiMobile.sh      installAi.sh + React Native skills
 ├── agents/                 Claude/Codex/OpenCode base configs (merged, not stowed)
-├── .zshenv                 sets ZDOTDIR=~/.config/zsh (only file at $HOME)
+├── .github/                CI workflow + check.sh (not stowed)
+├── .zshenv                 sets ZDOTDIR=~/.config/zsh, sources it (only file at $HOME)
 └── .config/
     ├── fish/               Fish shell — conf.d, functions, abbreviations
     ├── git/                Git — shared config + delta diff + global ignore
@@ -93,8 +100,8 @@ nvim
 | Tool | Purpose |
 |---|---|
 | [Ghostty](https://ghostty.org) | Terminal emulator |
-| [fish](https://fishshell.com) | Interactive shell |
-| [zsh](https://zsh.sourceforge.io) | Default shell |
+| [fish](https://fishshell.com) | Default login shell |
+| [zsh](https://zsh.sourceforge.io) | Fully configured alternative (`LOGIN_SHELL=zsh ./install.sh`) |
 | [starship](https://starship.rs) | Prompt — shared by fish and zsh |
 
 ### Core CLI
@@ -136,7 +143,7 @@ nvim
 |---|---|
 | [node](https://nodejs.org) | System Node (for Mason/tooling) |
 | [fnm](https://github.com/Schniz/fnm) | Node version manager (installs LTS on setup) |
-| [pnpm](https://pnpm.io) | Node package manager |
+| [pnpm](https://pnpm.io) / [yarn](https://yarnpkg.com) | Node package managers |
 | [go](https://go.dev) | Go toolchain |
 | [pyenv](https://github.com/pyenv/pyenv) | Python version manager |
 | [rbenv](https://github.com/rbenv/rbenv) | Ruby version manager |
@@ -156,11 +163,12 @@ nvim
 | LSP | yamlls | YAML (Docker Compose, CI configs) |
 | LSP | dockerls | Dockerfile |
 | LSP | marksman | Markdown |
-| Formatter | prettier | JS/TS/CSS/HTML/JSON/YAML |
+| Formatter | prettierd | JS/TS/CSS/HTML/JSON/YAML/Markdown/GraphQL |
 | Formatter | stylua | Lua |
 | Formatter | shfmt | Shell |
+| Debug | nvim-dap + js-debug-adapter | Node / Chrome debugging |
 | Tests | neotest + neotest-jest | Run Jest tests inline |
-| Theme | Catppuccin Mocha | Matches ghostty, herdr, yazi |
+| Theme | onedark (deep) | Catppuccin Mocha also installed; ghostty/herdr/yazi/fzf use Catppuccin |
 
 ### Fish plugins — via [Fisher](https://github.com/jorgebucaran/fisher)
 
@@ -184,7 +192,6 @@ nvim
 | jeffreytse/zsh-vi-mode | Full vi keybindings + text objects |
 | hlissner/zsh-autopair | Auto-close brackets and quotes |
 | kutsan/zsh-system-clipboard | Vi-mode yank/paste ↔ system clipboard |
-| MichaelAquilina/zsh-you-should-use | Reminds you to use defined aliases |
 | mollifier/cd-gitroot | `cdg` — jump to git repo root |
 
 Native (no plugin needed):
@@ -219,7 +226,7 @@ so the herdr sidebar shows whether an agent is working, waiting or done.
 
 ```bash
 cd ~/.dotfiles && git pull
-exec zsh          # or: exec fish — restart shell to pick up changes
+exec fish         # or: exec zsh — restart shell to pick up changes
 ```
 
 Configs are symlinks, so `git pull` updates them in place — no re-stow needed
@@ -241,16 +248,11 @@ git diff          # inspect what the machine version had
 git restore .     # keep the repo version (or commit files you want to keep)
 ```
 
-**Yazi plugins** — not installed by `install.sh`, run once manually:
-
-```bash
-ya pkg install
-```
-
 **Machine-local config** — create once per machine, never committed:
 
 ```bash
 # API tokens, SDK paths, local tool config
+~/.config/fish/config-local.fish
 ~/.config/zsh/.zshrc.local
 
 # git identity
@@ -265,7 +267,7 @@ Prefix is `Ctrl+t` (same as the old tmux setup).
 
 | Keys | Action |
 |---|---|
-| `hdev [-a codex\|opencode] [dir\|zoxide-query]` | Workspace for a project: nvim 70% + agent 30% (default agent: claude). Reuses an open workspace with the same name |
+| `hdev [-a codex\|opencode] [dir\|zoxide-query]` | Workspace for a project: nvim 70% + agent 30% (default agent: claude). Switches to an open workspace with the same name; if you're already in it, builds the layout in place |
 | `Ctrl+h/j/k/l` in nvim | Move between nvim splits, then into the neighbouring herdr pane |
 | `prefix h/j/k/l` | Move between herdr panes (from a shell/agent pane) |
 | `prefix g` / `prefix v` | Split side by side / stacked |
@@ -287,7 +289,7 @@ Opt-outs set by this repo. Auto-updates stay on for Claude Code.
 
 | Where | What |
 |---|---|
-| `.config/zsh/.zshenv`, `.config/fish/conf.d/env.fish` | `DO_NOT_TRACK`, Claude Code `DISABLE_TELEMETRY` + `DISABLE_ERROR_REPORTING`, Vercel plugin, Caveman CLI, Next.js, Turborepo, Expo, Astro, Gatsby, Storybook, Homebrew analytics |
+| `.config/zsh/.zshenv`, `.config/fish/conf.d/env.fish` | `DO_NOT_TRACK`, Claude Code `DISABLE_TELEMETRY` + `DISABLE_ERROR_REPORTING`, Vercel plugin, Caveman plugin, Next.js, Turborepo, Expo, Astro, Gatsby, Storybook, Homebrew analytics |
 | `agents/claude/settings.base.json` `env` | Same Claude/plugin opt-outs for agents started outside a shell (Conductor, IDE) |
 | `.config/herdr/config.toml` `[update]` | No background version/manifest checks to herdr.dev — update with `brew upgrade herdr` |
 | `agents/codex/config.base.toml`, `installAi.sh` | Codex `[analytics]` and `[feedback]` disabled |
@@ -308,4 +310,24 @@ brew uninstall tmux sesh             # optional, no longer used
 fish -c 'fisher update'              # drops tmux.fish
 nvim --headless "+Lazy! clean" +qa   # drops vim-tmux-navigator
 ```
+
+---
+
+## Contributing / CI
+
+`main` is protected: every change goes through a pull request, and the `CI`
+workflow (`.github/workflows/ci.yml`) must pass before merging.
+
+```bash
+git switch -c my-change
+# edit, then run the same checks CI runs:
+.github/check.sh
+git commit -am "..." && git push -u origin my-change
+gh pr create --fill
+```
+
+`.github/check.sh` checks: bash/zsh/fish/lua syntax, shellcheck, TOML/JSON
+parsing, hardcoded `/Users/<name>` paths, secrets (gitleaks), `herdr config
+check`, stow into a fresh `$HOME` (nothing repo-only leaks), and that fresh
+zsh/fish login shells actually load the env (`EDITOR`, `DO_NOT_TRACK`).
 

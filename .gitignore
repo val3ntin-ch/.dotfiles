@@ -88,3 +88,6 @@
 
 # ── local tool state ──────────────────────────────────────────────────────────
 .config/zsh/zcompcache/
+
+# ── Claude Code — machine-local permissions ──────────────────────────────────
+.claude/settings.local.json
