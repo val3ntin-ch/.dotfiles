@@ -79,7 +79,7 @@ Interactive shells (every new tab, pane, exec zsh):
 ```
 
 **Login vs interactive:** opening your terminal app = login + interactive.
-A new tmux pane = interactive only (not login). This matters because `.zprofile`
+A new herdr pane = interactive only (not login). This matters because `.zprofile`
 only runs once per session while `.zshrc` runs for every pane.
 
 **The ZDOTDIR trick:** `~/.zshenv` sets `export ZDOTDIR="$HOME/.config/zsh"`.
@@ -144,7 +144,7 @@ Rule: **no subprocess forks, no eval, no output**. Pure variable assignments onl
 ### `$ZDOTDIR/.zprofile` (`~/.config/zsh/.zprofile`)
 
 Runs **once per login shell**. Use for things that spawn subprocesses — they're slow,
-so we don't want them running for every new tmux pane.
+so we don't want them running for every new herdr pane.
 
 **Homebrew shellenv** — `eval "$(/opt/homebrew/bin/brew shellenv)"` (Apple Silicon) or
 `/usr/local/bin/brew` (Intel). Sets `HOMEBREW_CELLAR`, `HOMEBREW_REPOSITORY`,
@@ -162,7 +162,7 @@ auto-switches Node version on `cd`, auto-installs missing versions.
 
 ### `$ZDOTDIR/.zshrc` — the main file
 
-Loaded for **every interactive shell**: new terminal, new tmux pane, `exec zsh`.
+Loaded for **every interactive shell**: new terminal, new herdr pane, `exec zsh`.
 Sections run in order — order matters.
 
 #### § 1 — Completion system
@@ -525,24 +525,6 @@ fallback line in `.zsh_plugins.txt`. Both are compatible with fzf-tab and autosu
 | `gunwip` | Undo last WIP commit |
 | `gopen` | Open repo in browser |
 
-### tmux
-
-| Alias | Command |
-|---|---|
-| `t` | `tmux` |
-| `T` | `tmux new-session -A -s main` — attach or create "main" |
-| `ta` | `tmux attach -t` |
-| `tn` | `tmux new-session -s` |
-| `tl` | `tmux list-sessions` |
-| `tk` | `tmux kill-session -t` |
-| `tka` | `tmux kill-server` — kill everything |
-| `ts` | `tmux switch-client -t` |
-| `tad` | `tmux attach -d -t` — detach others, then attach |
-| `tw` | `tmux list-windows` |
-| `trn` | `tmux rename-session` |
-| `tpk` | `tmux kill-pane` |
-| `tsrc` | `tmux source-file ~/.config/tmux/tmux.conf` |
-
 ### pnpm / Node
 
 | Alias | Command |
@@ -686,12 +668,11 @@ All functions live in `conf.d/functions.zsh` and `conf.d/git.zsh`.
 | `gsync` | `gsync` | Fetch origin/main → rebase current branch onto it |
 | `gstat` | `gstat` | Show ahead/behind vs main for every local branch |
 
-### tmux
+### herdr
 
 | Function | Usage | What it does |
 |---|---|---|
-| `fts` | `fts` | Fuzzy tmux session switcher. Preview: windows in each session |
-| `tdev` | `tdev` or `tdev myproject` | Spawn structured session: window 1 = nvim, window 2 = split panes |
+| `hdev` | `hdev`, `hdev myproject`, `hdev -a codex ./path` | Herdr workspace: nvim left 70% + agent right 30% (default `claude`). Reuses an open workspace with the same name |
 
 ### Nvim / plugin updates
 

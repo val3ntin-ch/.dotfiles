@@ -13,7 +13,7 @@ return {
     },
   },
 
-  -- Catppuccin Mocha — matches ghostty, tmux, fish, yazi
+  -- Catppuccin Mocha — matches ghostty, herdr, fish, yazi
   {
     "catppuccin/nvim",
     name = "catppuccin",
@@ -53,21 +53,6 @@ return {
       -- edit) throws "Invalid 'col': out of range" (nvim/neovim#39772),
       -- reproduced on stable 0.12.5. Toggle on with <leader>uh when wanted.
       inlay_hints = { enabled = false },
-    },
-  },
-
-  -- seamless navigation between tmux panes and nvim splits (Ctrl+h/j/k/l)
-  {
-    "christoomey/vim-tmux-navigator",
-    cmd = {
-      "TmuxNavigateLeft", "TmuxNavigateDown",
-      "TmuxNavigateUp", "TmuxNavigateRight",
-    },
-    keys = {
-      { "<c-h>", "<cmd>TmuxNavigateLeft<cr>" },
-      { "<c-j>", "<cmd>TmuxNavigateDown<cr>" },
-      { "<c-k>", "<cmd>TmuxNavigateUp<cr>" },
-      { "<c-l>", "<cmd>TmuxNavigateRight<cr>" },
     },
   },
 

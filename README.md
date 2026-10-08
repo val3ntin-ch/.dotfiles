@@ -20,11 +20,11 @@ Personal terminal setup for macOS — one script from zero to fully configured s
 # 1. clone the repo into ~/.dotfiles
 git clone https://github.com/val3ntin-ch/.dotfiles ~/.dotfiles
 
-# 2. run the bootstrap — installs all tools, stows dotfiles, sets zsh as default shell
+# 2. run the bootstrap — installs all tools, stows dotfiles, sets fish as default shell
 ~/.dotfiles/install.sh
 ```
 
-Open a new terminal when done. Zsh is the default shell with all plugins active.
+Open a new terminal when done. Fish is the default shell; zsh is fully configured too.
 
 > **Machine-specific config** (API keys, SDK paths, local tools) goes in  
 > `~/.config/zsh/.zshrc.local` — created manually per machine, never committed.
@@ -35,16 +35,16 @@ Open a new terminal when done. Zsh is the default shell with all plugins active.
 
 | Step | Action |
 |---|---|
-| 0 | Install Xcode CLI tools (C compiler for nvim-treesitter) |
+| 0 | Install or update Xcode CLI tools via `softwareupdate` (C compiler for nvim-treesitter; Homebrew needs them current); accepts the Xcode license if full Xcode is installed |
 | 1 | Install Homebrew (skip if already installed) |
 | 2 | Install all CLI tools via `brew install` |
 | 3 | Install Yazi + preview dependencies via `brew install` |
-| 4 | Install Sesh via custom tap |
+| 4 | Install herdr, Claude Code, Codex, OpenCode, Conductor; remove stale non-brew copies in `~/.local/bin` |
 | 5 | Install Ghostty + Nerd Fonts via `brew install --cask` |
 | 6 | Stow dotfiles to `$HOME` via GNU Stow + create runtime dirs. Pre-existing real files that would conflict (e.g. app-created `~/.config/git/ignore`) are backed up as `*.bak` automatically |
-| 7 | Set zsh as default shell via `chsh` |
+| 7 | Set fish as default shell via `chsh` (`LOGIN_SHELL=zsh ./install.sh` for zsh; skipped if already set) |
 | 8 | Install fish plugins via Fisher |
-| 9 | Bootstrap tmux plugins via TPM |
+| 9 | Install herdr agent-state hooks for claude, codex, opencode |
 | 10 | Install Node LTS via fnm + global npm packages (neovim, tree-sitter-cli) |
 
 **After install — one-time per machine:**
@@ -68,17 +68,19 @@ nvim
 ```
 ~/.dotfiles/
 ├── install.sh              macOS bootstrap script
+├── installAi.sh            agent plugins/skills + agent configs (web)
+├── installAiMobile.sh      installAi.sh + React Native skills
+├── agents/                 Claude/Codex/OpenCode base configs (merged, not stowed)
 ├── .zshenv                 sets ZDOTDIR=~/.config/zsh (only file at $HOME)
 └── .config/
     ├── fish/               Fish shell — conf.d, functions, abbreviations
     ├── git/                Git — shared config + delta diff + global ignore
     ├── zsh/                Zsh — antidote plugins, aliases, completions
     ├── nvim/               Neovim — LazyVim + React/TS/Tailwind/ESLint/Prettier
-    ├── tmux/               Tmux — keybindings, plugins, status bar
+    ├── herdr/              Herdr — agent multiplexer (replaces tmux)
     ├── lazygit/            Lazygit — Catppuccin Mocha theme + delta pager
     ├── ghostty/            Ghostty terminal config
     ├── starship/           Starship prompt (shared by fish + zsh)
-    ├── sesh/               Sesh session manager
     └── yazi/               Yazi file manager + previews
 ```
 
@@ -100,13 +102,12 @@ nvim
 | Tool | Purpose |
 |---|---|
 | [neovim](https://neovim.io) | Editor |
-| [tmux](https://github.com/tmux/tmux) | Terminal multiplexer |
+| [herdr](https://herdr.dev) | Terminal multiplexer for AI agents |
 | [yazi](https://yazi-rs.github.io) | File manager with image preview |
 | [git](https://git-scm.com) | Version control |
 | [gh](https://cli.github.com) | GitHub CLI |
 | [lazygit](https://github.com/jesseduffield/lazygit) | Git TUI |
 | [git-delta](https://dandavison.github.io/delta) | Diff pager |
-| [sesh](https://github.com/joshmedeski/sesh) | Tmux session manager |
 | [fzf](https://github.com/junegunn/fzf) | Fuzzy finder |
 | [zoxide](https://github.com/ajeetdsouza/zoxide) | Smart `cd` with frecency |
 | [eza](https://eza.rocks) | Modern `ls` |
@@ -159,7 +160,7 @@ nvim
 | Formatter | stylua | Lua |
 | Formatter | shfmt | Shell |
 | Tests | neotest + neotest-jest | Run Jest tests inline |
-| Theme | Catppuccin Mocha | Matches ghostty, tmux, yazi |
+| Theme | Catppuccin Mocha | Matches ghostty, herdr, yazi |
 
 ### Fish plugins — via [Fisher](https://github.com/jorgebucaran/fisher)
 
@@ -170,7 +171,6 @@ nvim
 | [patrickf1/fzf.fish](https://github.com/PatrickF1/fzf.fish) | fzf key bindings |
 | [jhillyerd/plugin-git](https://github.com/jhillyerd/plugin-git) | Git abbreviations |
 | [catppuccin/fish](https://github.com/catppuccin/fish) | Catppuccin Mocha theme |
-| [budimanjojo/tmux.fish](https://github.com/budimanjojo/tmux.fish) | Tmux integration |
 
 ### Zsh plugins — via [antidote](https://getantidote.github.io)
 
@@ -192,20 +192,17 @@ Native (no plugin needed):
 - **magic-enter** — empty `Enter` → `eza -la` or `git status`
 - **colored man pages** — via `MANPAGER=bat`
 
-### Tmux plugins — via [TPM](https://github.com/tmux-plugins/tpm)
+### AI agents
 
-| Plugin | Purpose |
+| Tool | Purpose |
 |---|---|
-| tmux-plugins/tmux-sensible | Sane defaults |
-| tmux-plugins/tmux-resurrect | Save and restore sessions across reboots |
-| tmux-plugins/tmux-continuum | Auto-save sessions every 15 min |
-| tmux-plugins/tmux-yank | System clipboard integration |
-| christoomey/vim-tmux-navigator | Seamless pane/split navigation with Neovim |
-| sainnhe/tmux-fzf | fzf-powered tmux actions |
-| wfxr/tmux-fzf-url | Open URLs from pane output with fzf |
-| catppuccin/tmux | Catppuccin Mocha theme |
-| tmux-plugins/tmux-cpu | CPU usage in status bar |
-| tmux-plugins/tmux-battery | Battery percentage in status bar |
+| [Claude Code](https://claude.com/claude-code) | Anthropic coding agent (native installer, auto-updates) |
+| [Codex](https://github.com/openai/codex) | OpenAI coding agent (cask) |
+| [OpenCode](https://opencode.ai) | Open-source coding agent (`anomalyco/tap`) |
+| [Conductor](https://conductor.build) | Mac app — parallel Claude/Codex agents in worktrees |
+
+Each CLI agent gets herdr's integration hook (`herdr integration install …`),
+so the herdr sidebar shows whether an agent is working, waiting or done.
 
 ### Fonts
 
@@ -226,9 +223,7 @@ exec zsh          # or: exec fish — restart shell to pick up changes
 ```
 
 Configs are symlinks, so `git pull` updates them in place — no re-stow needed
-unless files were added/moved. Tmux: `Ctrl+t r` reloads the config; sessions
-created before a `tdev` layout change keep the old layout (`tk <name>`, then
-`tdev` again).
+unless files were added/moved. Herdr: `Ctrl+t r` reloads the config.
 
 **Re-stow after adding or moving dotfiles:**
 
@@ -261,3 +256,56 @@ ya pkg install
 # git identity
 ~/.config/git/config.local
 ```
+
+---
+
+## Herdr + Neovim workflow
+
+Prefix is `Ctrl+t` (same as the old tmux setup).
+
+| Keys | Action |
+|---|---|
+| `hdev [-a codex\|opencode] [dir\|zoxide-query]` | Workspace for a project: nvim 70% + agent 30% (default agent: claude). Reuses an open workspace with the same name |
+| `Ctrl+h/j/k/l` in nvim | Move between nvim splits, then into the neighbouring herdr pane |
+| `prefix h/j/k/l` | Move between herdr panes (from a shell/agent pane) |
+| `prefix g` / `prefix v` | Split side by side / stacked |
+| `prefix o` | Workspace picker (was sesh) |
+| `prefix shift+g` | New git worktree workspace — run a second agent on its own branch |
+| `prefix alt+g` / `prefix y` | lazygit / yazi popup |
+| `prefix f` | Go to (was `prefix g` in herdr defaults) |
+| `prefix r` | Reload config |
+| `prefix ?` | All keys |
+
+Agents running in herdr can drive it too: `herdr --skill` prints the skill
+file that teaches an agent to open panes and start other agents.
+
+---
+
+## Privacy / telemetry
+
+Opt-outs set by this repo. Auto-updates stay on for Claude Code.
+
+| Where | What |
+|---|---|
+| `.config/zsh/.zshenv`, `.config/fish/conf.d/env.fish` | `DO_NOT_TRACK`, Claude Code `DISABLE_TELEMETRY` + `DISABLE_ERROR_REPORTING`, Vercel plugin, Caveman CLI, Next.js, Turborepo, Expo, Astro, Gatsby, Storybook, Homebrew analytics |
+| `agents/claude/settings.base.json` `env` | Same Claude/plugin opt-outs for agents started outside a shell (Conductor, IDE) |
+| `.config/herdr/config.toml` `[update]` | No background version/manifest checks to herdr.dev — update with `brew upgrade herdr` |
+| `agents/codex/config.base.toml`, `installAi.sh` | Codex `[analytics]` and `[feedback]` disabled |
+| `agents/opencode/opencode.json` | `"share": "disabled"` — no session upload links |
+
+Your prompts and code still go to the model provider; these switches only cut
+the extra usage tracking.
+
+---
+
+## Migrating an existing machine from tmux
+
+```bash
+cd ~/.dotfiles && git pull
+./install.sh                         # installs herdr/agents, restows, removes tmux symlinks
+./installAi.sh                       # merges agent configs, telemetry off
+brew uninstall tmux sesh             # optional, no longer used
+fish -c 'fisher update'              # drops tmux.fish
+nvim --headless "+Lazy! clean" +qa   # drops vim-tmux-navigator
+```
+

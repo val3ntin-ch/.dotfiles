@@ -1,10 +1,48 @@
 # ~/.config/herdr/config.toml
-# Herdr — terminal agent multiplexer. Prefix matches tmux (C-t) so muscle
-# memory carries over; tmux uses catppuccin mocha, herdr's closest built-in
-# is "catppuccin" (dark).
+# Herdr — terminal agent multiplexer. Replaces tmux + sesh. Prefix and split
+# keys match the old tmux config (C-t, v/g) so muscle memory carries over.
+# Full reference: `herdr --default-config`.
+
+# first-run notification setup already chosen — don't show it again
+onboarding = false
 
 [theme]
 name = "catppuccin"
 
+[terminal]
+# pass Kitty-protocol images through to Ghostty (yazi previews, snacks.image)
+kitty_graphics = true
+
+[update]
+# no background calls to herdr.dev — update via `brew upgrade herdr`
+version_check = false
+manifest_check = false
+
 [keys]
 prefix = "ctrl+t"
+reload_config = "prefix+r"
+# was tmux `bind v` (stacked) / `bind g` (side by side)
+split_horizontal = "prefix+v"
+split_vertical = "prefix+g"
+# was the sesh picker (prefix+o)
+workspace_picker = "prefix+o"
+# defaults moved off the keys taken above (goto was prefix+g, notification prefix+o)
+goto = "prefix+f"
+open_notification_target = "prefix+shift+o"
+
+[[keys.command]]
+key = "prefix+alt+g"
+type = "popup"
+command = "lazygit"
+width = "90%"
+height = "90%"
+
+[[keys.command]]
+key = "prefix+y"
+type = "popup"
+command = "yazi"
+width = "90%"
+height = "90%"
+
+[worktrees]
+directory = "~/.herdr/worktrees"

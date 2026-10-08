@@ -2,7 +2,7 @@
 
 ## What is this directory and why does it exist?
 
-Fish has a strict load order. Every time you open a terminal (or a new tmux
+Fish has a strict load order. Every time you open a terminal (or a new herdr
 pane, or run `exec fish`) Fish loads files in this sequence:
 
 ```
@@ -47,7 +47,6 @@ why Fisher over others (Oh-My-Fish, etc)?
 | `kidonng/zoxide.fish` | zoxide integration: `z`, `zi` — frecency-based directory jumping |
 | `jhillyerd/plugin-git` | ~150 git abbreviations (expand in-place on Space) |
 | `catppuccin/fish` | Sets `fish_color_*` variables to Catppuccin Mocha palette |
-| `budimanjojo/tmux.fish` | tmux wrapper: auto-connect, TERM fixing, `ta`/`ts`/`tl`/`tksv` etc. |
 
 ---
 
@@ -186,22 +185,6 @@ always prefix with `command` inside the alias body to avoid infinite recursion.
 | `fdd` | `fd --type d` |
 | `fdh` | `fd --hidden` |
 
-#### tmux
-> `ta`, `tad`, `ts`, `tl`, `tksv`, `tkss`, `tds` provided by `budimanjojo/tmux.fish`
-
-| Alias | Expands to |
-|-------|-----------|
-| `t` | `tmux` |
-| `tn` | `tmux new-session -s` |
-| `tns` | `tmux new-session` |
-| `tw` | `tmux list-windows` |
-| `tk` | `tmux kill-session -t` |
-| `tka` | `tmux kill-server` |
-| `trn` | `tmux rename-session` |
-| `tpk` | `tmux kill-pane` |
-| `tsrc` | `tmux source-file ~/.config/tmux/tmux.conf` |
-| `T` | `tmux new-session -A -s main` (attach to "main" or create it) |
-
 #### pnpm
 | Alias | Expands to |
 |-------|-----------|
@@ -239,7 +222,7 @@ always prefix with `command` inside the alias body to avoid infinite recursion.
 | Alias | Expands to |
 |-------|-----------|
 | `reload` | `exec fish` (fresh shell, clean state) |
-| `path` | `printf "%s\n" $PATH \| nl` |
+| `paths` | `printf "%s\n" $PATH \| nl` (`path` is a fish builtin) |
 | `ports` | `lsof -i -P -n \| grep LISTEN` |
 | `myip` | curl api.ipify.org |
 | `df` | `df -h` |
@@ -376,24 +359,6 @@ zoxide tracks every directory you visit, weighted by frecency
 
 ---
 
-### `conf.d/tmux.fish` — Tmux Plugin (budimanjojo/tmux.fish)
-
-wraps the `tmux` command to fix `$TERM`, auto-connect to existing
-sessions, and provide directory-named session creation.
-
-| Alias/function | What it does |
-|----------------|-------------|
-| `ta` | `tmux attach -t <session>` |
-| `tad` | `tmux attach -d -t <session>` (detach others first) |
-| `ts` | `tmux new-session -s <name>` |
-| `tl` | `tmux list-sessions` |
-| `tksv` | `tmux kill-server` |
-| `tkss` | `tmux kill-session -t <name>` |
-| `tds` | create/attach session named after current dir (path-hashed) |
-| `tmuxconf` | open tmux config in `$EDITOR` |
-
----
-
 ## § 3  Git Abbreviations — jhillyerd/plugin-git
 
 > Full list lives in the plugin source. Run `fish -c "abbr --list | grep ^g"` to see all ~150.
@@ -519,18 +484,12 @@ Rename a branch locally and on origin. Updates the remote tracking ref.
 
 ---
 
-### Tmux Functions
+### Herdr Functions
 
-#### `fts` — fuzzy session switcher
-Lists all tmux sessions in fzf with window preview. Enter switches to it.
-
-#### `tdev [name] [root]`
-Create a structured dev tmux session:
-- Window 1 `editor`: opens `nvim .`
-- Window 2 `dev`: horizontal split (run server left, run tests right)
-
-If session already exists, attaches/switches to it.
-Usage: `tdev` (uses cwd name), `tdev myproject ~/projects/myproject`
+#### `hdev [-a agent] [dir | zoxide-query]`
+Open a herdr workspace for a project: `nvim .` left 70%, agent right 30%
+(default `claude`; `-a codex` / `-a opencode`). If a workspace with the
+project's name is already open, focuses it instead. Must run inside herdr.
 
 ---
 

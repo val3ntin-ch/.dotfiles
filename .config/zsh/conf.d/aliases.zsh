@@ -277,33 +277,6 @@ alias ghash='git rev-parse --short HEAD'           # print current commit hash
 alias gurl='git remote get-url origin'             # print origin URL
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TMUX
-# ══════════════════════════════════════════════════════════════════════════════
-#
-# tmux terminology:
-#   server  → background process, holds all sessions
-#   session → a collection of windows (like a project workspace)
-#   window  → a tab within a session
-#   pane    → a split within a window
-
-alias t='tmux'
-alias ta='tmux attach -t'                         # attach to named session
-alias tad='tmux attach -d -t'                     # detach others, then attach
-alias tn='tmux new-session -s'                    # new named session
-alias tns='tmux new-session'                      # new unnamed session
-alias tl='tmux list-sessions'                     # list sessions
-alias tw='tmux list-windows'                      # list windows in current session
-alias tk='tmux kill-session -t'                   # kill named session
-alias tka='tmux kill-server'                      # kill EVERYTHING
-alias ts='tmux switch-client -t'                  # switch to session by name
-alias trn='tmux rename-session'                   # rename current session
-alias tpk='tmux kill-pane'                        # kill current pane
-alias tsrc='tmux source-file ~/.config/tmux/tmux.conf'  # reload config
-
-# Smart tmux attach: attach to existing or create new
-alias T='tmux new-session -A -s main'             # attach to "main" or create it
-
-# ══════════════════════════════════════════════════════════════════════════════
 # NODE / PNPM
 # ══════════════════════════════════════════════════════════════════════════════
 

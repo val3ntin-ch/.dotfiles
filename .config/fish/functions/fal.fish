@@ -1,4 +1,4 @@
-function fal -d "Fuzzy alias/abbr finder: fal (all), fal git, fal tmux"
+function fal -d "Fuzzy alias/abbr finder: fal (all), fal git, fal pnpm"
     begin
         alias
         abbr

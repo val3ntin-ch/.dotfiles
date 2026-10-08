@@ -38,7 +38,7 @@ No includes or split files — single flat config.
 | Key | Value | Why |
 |---|---|---|
 | `theme` | `Catppuccin Mocha` | base 16-color ANSI palette — lowest layer of theming stack |
-| `font-family` | `JetBrainsMono Nerd Font` | Nerd Font required for starship/eza/sesh icons |
+| `font-family` | `JetBrainsMono Nerd Font` | Nerd Font required for starship/eza/yazi icons |
 | `font-size` | `16` | comfortable reading size |
 | `font-thicken` | `true` | slightly bolder stroke on Retina/HiDPI displays |
 | `font-feature = calt` | contextual alternates | JetBrains Mono ligatures (`->`, `=>`, `!=`, `//`) |
@@ -85,7 +85,7 @@ Shell integration enables:
 |---|---|
 | `scrollback-limit` | `10000000` (10M lines) |
 
-Effectively unlimited. tmux also maintains its own scrollback (`history-limit 1000000` in tmux options).
+Effectively unlimited. Herdr keeps its own per-pane scrollback.
 
 ### Updates
 
@@ -97,7 +97,7 @@ Effectively unlimited. tmux also maintains its own scrollback (`history-limit 10
 
 | Key | Value | Why |
 |---|---|---|
-| `macos-option-as-alt` | `true` | Option key sends `Alt` — required for tmux/vim alt bindings |
+| `macos-option-as-alt` | `true` | Option key sends `Alt` — required for herdr/vim alt bindings |
 | `mouse-hide-while-typing` | `true` | cursor disappears while typing, reappears on move |
 
 `macos-option-as-alt = true` applies to both left and right Option keys.
@@ -136,7 +136,7 @@ Font required: **JetBrainsMono Nerd Font**
 brew install --cask font-jetbrains-mono-nerd-font
 ```
 
-Without the Nerd Font variant, icons in starship, eza, sesh, and tmux
+Without the Nerd Font variant, icons in starship, eza, herdr, and yazi
 catppuccin theme will render as boxes or question marks.
 
 Ligatures enabled via OpenType features:
@@ -165,7 +165,7 @@ ghostty +list-themes
 ```
 
 The Ghostty theme only sets the 16 ANSI colors. Full Catppuccin Mocha theming
-comes from each tool's own config (tmux, nvim, lazygit, yazi, bat, fzf, starship).
+comes from each tool's own config (herdr, nvim, lazygit, yazi, bat, fzf, starship).
 
 ---
 
@@ -189,5 +189,5 @@ Ghostty default keybindings (macOS) — none overridden in config:
 | Decrease font size | `Cmd+-` |
 | Reset font size | `Cmd+0` |
 
-Splits are Ghostty-native — separate from tmux splits (`prefix+v/g`).
+Splits are Ghostty-native — separate from herdr splits (`prefix+v/g`).
 

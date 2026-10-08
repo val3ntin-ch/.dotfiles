@@ -5,11 +5,34 @@ DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 step() { printf '\n\033[1;36m==> %s\033[0m\n' "$1"; }
 
 # ── 0. Xcode CLI tools (C compiler for nvim-treesitter) ──────────────────────
+# Install if missing AND update if outdated — Homebrew refuses to build with
+# stale tools. With CLT installed, `softwareupdate --list` shows it only when
+# an update exists. When missing, this flag file makes it list the package
+# anyway (the flag also lists it when current, so set it only when missing).
+step "Xcode CLI tools"
+CLT_FLAG=/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+xcode-select -p &>/dev/null || touch "$CLT_FLAG"
+CLT_LABEL="$(softwareupdate --list 2>/dev/null \
+  | sed -n 's/^\* Label: \(Command Line Tools for Xcode.*\)$/\1/p' \
+  | sort -V | tail -1)"
+if [[ -n "$CLT_LABEL" ]]; then
+  echo "  installing $CLT_LABEL"
+  sudo softwareupdate --install "$CLT_LABEL" --verbose
+else
+  echo "  up to date"
+fi
+rm -f "$CLT_FLAG"
+# fallback: softwareupdate listed nothing and no tools exist → GUI installer
 if ! xcode-select -p &>/dev/null; then
-  step "Xcode CLI tools"
   xcode-select --install
   echo "  Waiting for Xcode CLI tools to finish installing..."
   until xcode-select -p &>/dev/null; do sleep 5; done
+fi
+# full Xcode.app (React Native) blocks git/brew/clang until its license is
+# accepted — again after every Xcode update. `check` fails when unaccepted.
+if [[ "$(xcode-select -p)" == *Xcode*.app* ]] && ! xcodebuild -license check &>/dev/null; then
+  echo "  accepting Xcode license"
+  sudo xcodebuild -license accept
 fi
 
 # ── 1. Homebrew ───────────────────────────────────────────────────────────────
@@ -25,9 +48,8 @@ brew update
 step "Core tools"
 brew install \
   fish zsh starship antidote neovim git gh lazygit git-delta \
-  stow tmux vivid ouch bat eza fnm pnpm yarn go pyenv rbenv \
-  tree-sitter watchman node herdr
-brew install --cask claude-code
+  stow vivid ouch bat eza fnm pnpm yarn go pyenv rbenv \
+  tree-sitter watchman node
 # `install` is a no-op on a machine that already has an older neovim — force
 # it current every run. Real motivation: hit a neovim-core inlay-hint crash
 # (nvim/neovim#39772, fixed upstream) that only reproduced on a stale 0.12.5;
@@ -41,9 +63,28 @@ brew install \
   markdownlint-cli2
 brew link ffmpeg-full imagemagick-full -f --overwrite
 
-# ── 4. Sesh (custom tap) ──────────────────────────────────────────────────────
-step "Sesh"
-brew install joshmedeski/sesh/sesh
+# ── 4. Herdr + coding agents ──────────────────────────────────────────────────
+step "Herdr + coding agents"
+brew install herdr
+# Claude Code via its native installer, not the brew cask — native auto-updates
+# in the background; the cask only moves on `brew upgrade`
+command -v claude &>/dev/null || curl -fsSL https://claude.ai/install.sh | bash
+brew install --cask codex
+# `install` leaves an already-installed cask on its old version
+brew upgrade --cask codex || true
+# Conductor self-updates; a copy dragged into /Applications by hand would make
+# the cask install abort on "already an App at ..."
+[[ -d /Applications/Conductor.app ]] || brew install --cask conductor
+# opencode's official tap — newer brew refuses untrusted taps until trusted
+brew tap anomalyco/tap
+brew trust anomalyco/tap 2>/dev/null || true
+brew install anomalyco/tap/opencode
+# Remove copies installed outside brew (curl/webi/npm) — ~/.local/bin and fnm's
+# node bin sit ahead of brew on PATH, so a stale copy silently wins.
+for bin in herdr gh webi; do
+  [[ -e "$HOME/.local/bin/$bin" ]] && rm -f "$HOME/.local/bin/$bin" && echo "  removed ~/.local/bin/$bin"
+done
+command -v npm &>/dev/null && npm ls -g @openai/codex &>/dev/null && npm uninstall -g @openai/codex
 
 # ── 5. Ghostty + fonts ────────────────────────────────────────────────────────
 step "Ghostty + fonts"
@@ -74,11 +115,18 @@ mkdir -p \
   "$HOME/.config/git"
 (cd "$DOTFILES" && stow --target="$HOME" --restow .)
 
-# ── 7. Default shell → zsh ────────────────────────────────────────────────────
-step "Default shell → zsh"
-ZSH_PATH="$(brew --prefix)/bin/zsh"
-grep -qF "$ZSH_PATH" /etc/shells || echo "$ZSH_PATH" | sudo tee -a /etc/shells
-chsh -s "$ZSH_PATH"
+# ── 7. Default shell → fish ───────────────────────────────────────────────────
+# zsh stays installed and configured; switch back with LOGIN_SHELL=zsh ./install.sh
+LOGIN_SHELL="${LOGIN_SHELL:-fish}"
+step "Default shell → $LOGIN_SHELL"
+SHELL_PATH="$(brew --prefix)/bin/$LOGIN_SHELL"
+grep -qF "$SHELL_PATH" /etc/shells || echo "$SHELL_PATH" | sudo tee -a /etc/shells
+# chsh always prompts for the password — skip it when already the login shell
+if [[ "$(dscl . -read "$HOME" UserShell | awk '{print $2}')" != "$SHELL_PATH" ]]; then
+  chsh -s "$SHELL_PATH"
+else
+  echo "  already $LOGIN_SHELL"
+fi
 
 # ── 8. Fish plugins ───────────────────────────────────────────────────────────
 step "Fish plugins"
@@ -87,15 +135,13 @@ fish -c "
   fisher update
 "
 
-# ── 9. Tmux plugins (TPM) ─────────────────────────────────────────────────────
-step "Tmux plugins"
-TPM_DIR="$HOME/.config/tmux/plugins/tpm"
-[[ -d "$TPM_DIR" ]] || git clone https://github.com/tmux-plugins/tpm "$TPM_DIR"
-# install_plugins needs a running server to read the plugin list from tmux.conf
-tmux start-server 2>/dev/null || true
-tmux new-session -d -s _setup 2>/dev/null || true
-"$TPM_DIR/bin/install_plugins"
-tmux kill-session -t _setup 2>/dev/null || true
+# ── 9. Herdr agent integrations ───────────────────────────────────────────────
+step "Herdr agent integrations"
+# hooks that report each agent's state (working / waiting / done) to herdr's
+# sidebar — idempotent, rewrites to the current version on rerun
+for agent in claude codex opencode; do
+  herdr integration install "$agent"
+done
 
 # ── 10. Node LTS ──────────────────────────────────────────────────────────────
 step "Node LTS"
@@ -112,7 +158,7 @@ step "Yazi plugins"
 # (partial upgrade, prior manual `rm -rf` fix) should never block this from running.
 (cd "$HOME/.config/yazi" && ya pkg upgrade --discard)
 
-printf '\n\033[1;32m✓ Done. Open a new terminal — zsh is your default shell.\033[0m\n'
+printf '\n\033[1;32m✓ Done. Open a new terminal — fish is your default shell.\033[0m\n'
 printf '  Next steps:\n'
 printf '    1. Set git identity (once per machine):\n'
 printf '       cat > ~/.config/git/config.local <<EOF\n'
@@ -124,7 +170,8 @@ printf '    2. nvim                  → first launch installs all plugins (~2-5
 printf '    3. :LazyHealth           → verify everything is working\n'
 printf '    4. If `ya pkg upgrade` above changed package.toml, commit it —\n'
 printf '       keeps other machines in sync with the plugin revs that just worked.\n'
-printf '    5. Claude Code marketplaces/plugins/skills are NOT installed by this\n'
-printf '       script — run one of:\n'
+printf '    5. Log in once: gh auth login · claude · codex · opencode auth login\n'
+printf '    6. Agent plugins/skills + agent configs (telemetry off) — run one of:\n'
 printf '         ./installAi.sh        (web-only skillset)\n'
-printf '         ./installAiMobile.sh  (web + React Native skillset)\n\n'
+printf '         ./installAiMobile.sh  (web + React Native skillset)\n'
+printf '    7. herdr                 → then `hdev <project>` for nvim + agent layout\n\n'

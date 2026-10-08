@@ -10,3 +10,8 @@ export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_STATE_HOME="$HOME/.local/state"
 export ANTIDOTE_HOME="$HOME/.local/share/antidote"
+
+# zsh reads .zshenv only once, from $HOME — setting ZDOTDIR above does NOT
+# make it also read $ZDOTDIR/.zshenv, so source it explicitly (PATH, EDITOR,
+# telemetry opt-outs live there).
+[[ -r "$ZDOTDIR/.zshenv" ]] && source "$ZDOTDIR/.zshenv"

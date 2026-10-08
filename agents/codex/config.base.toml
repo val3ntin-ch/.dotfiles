@@ -1,0 +1,17 @@
+# Seed for ~/.codex/config.toml — copied only when that file doesn't exist.
+# Codex rewrites its config (trusted projects, plugins, hook hashes), so it is
+# not symlinked; installAi.sh also enforces the telemetry tables below on
+# existing configs.
+model_reasoning_effort = "medium"
+
+[features]
+hooks = true
+
+[analytics]
+enabled = false
+
+[feedback]
+enabled = false
+
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"

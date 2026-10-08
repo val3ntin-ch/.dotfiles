@@ -15,5 +15,9 @@ CHANGELOG
 # ── Claude Code ───────────────────────────────────────────────────────────────
 \.claude
 
-# ── Bootstrap script (runs from repo, not stowed to $HOME) ───────────────────
+# ── Bootstrap scripts (run from repo, not stowed to $HOME) ───────────────────
 install\.sh
+installAi.*\.sh
+
+# ── Agent base configs (merged into place by installAi.sh, not stowed) ───────
+^/agents

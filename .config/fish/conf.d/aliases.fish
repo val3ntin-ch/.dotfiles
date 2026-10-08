@@ -37,19 +37,6 @@ if status is-interactive
         alias fdh 'command fd --hidden'
     end
 
-    # ── tmux ──────────────────────────────────────────────────────────────────
-    # ta/tad/ts/tl/tksv/tkss provided by budimanjojo/tmux.fish
-    alias t    tmux
-    alias tn   'tmux new-session -s'
-    alias tns  'tmux new-session'
-    alias tw   'tmux list-windows'
-    alias tk   'tmux kill-session -t'
-    alias tka  'tmux kill-server'
-    alias trn  'tmux rename-session'
-    alias tpk  'tmux kill-pane'
-    alias tsrc 'tmux source-file ~/.config/tmux/tmux.conf'
-    alias T    'tmux new-session -A -s main'
-
     # ── pnpm ──────────────────────────────────────────────────────────────────
     alias pn     pnpm
     alias pni    'pnpm install'
@@ -81,7 +68,9 @@ if status is-interactive
 
     # ── system ────────────────────────────────────────────────────────────────
     alias reload 'exec fish'
-    alias path   'printf "%s\n" $PATH | nl'
+    # not `path` — that shadows fish's builtin `path`, which completion and
+    # autosuggestions call while typing (spams "usage: nl")
+    alias paths  'printf "%s\n" $PATH | nl'
     alias ports  'lsof -i -P -n | grep LISTEN'
     alias myip   'curl -s https://api.ipify.org; and echo'
     alias df     'df -h'

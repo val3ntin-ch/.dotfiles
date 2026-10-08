@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 step() { printf '\n\033[1;36m==> %s\033[0m\n' "$1"; }
 
 # Claude Code marketplaces + plugins/skills for web dev. Run ./installAiMobile.sh
@@ -31,10 +32,13 @@ CLAUDE_PLUGINS=(
   last30days@last30days-skill
   lua-lsp@claude-plugins-official
   playwright@claude-plugins-official
+  pr-review-toolkit@claude-plugins-official
   security-guidance@claude-plugins-official
+  sentry@claude-plugins-official
   supabase@claude-plugins-official
   superpowers@claude-plugins-official
   typescript-lsp@claude-plugins-official
+  vercel@claude-plugins-official
 )
 for plugin in "${CLAUDE_PLUGINS[@]}"; do
   claude plugin install "$plugin" -y || true
@@ -46,5 +50,29 @@ step "Web skills (npx skills CLI)"
 # which would wrongly nest a copy inside the dotfiles checkout.
 (cd "$HOME" && npx --yes skills add https://github.com/vercel-labs/agent-skills --skill vercel-react-best-practices)
 (cd "$HOME" && npx --yes skills add https://github.com/vercel-labs/agent-skills --skill vercel-composition-patterns)
+
+step "Agent configs (agents/)"
+# Agents rewrite their own config files (plugins, trusted dirs, hook hashes),
+# so these are merged/seeded rather than symlinked — keeps machine paths out
+# of the repo. Repo values win on overlapping keys; everything else is kept.
+mkdir -p "$HOME/.claude" "$HOME/.codex" "$HOME/.config/opencode"
+merge_json() {  # merge_json <base> <target>
+  local tmp
+  tmp="$(mktemp)"
+  [[ -f "$2" ]] || echo '{}' > "$2"
+  jq -s '.[0] * .[1]' "$2" "$1" > "$tmp" && mv "$tmp" "$2"
+}
+merge_json "$DOTFILES/agents/claude/settings.base.json" "$HOME/.claude/settings.json"
+merge_json "$DOTFILES/agents/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+ln -sf "$DOTFILES/agents/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+if [[ -f "$HOME/.codex/config.toml" ]]; then
+  # existing config: only make sure analytics + feedback are off
+  for table in analytics feedback; do
+    grep -q "^\[$table\]" "$HOME/.codex/config.toml" \
+      || printf '\n[%s]\nenabled = false\n' "$table" >> "$HOME/.codex/config.toml"
+  done
+else
+  cp "$DOTFILES/agents/codex/config.base.toml" "$HOME/.codex/config.toml"
+fi
 
 printf '\n\033[1;32m✓ Web Claude skillset installed.\033[0m\n'

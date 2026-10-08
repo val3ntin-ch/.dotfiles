@@ -2,7 +2,7 @@
 # $ZDOTDIR/.zshrc  ·  interactive shell config
 # ══════════════════════════════════════════════════════════════════════════════
 #
-# ZSH has a strict load order. Every time you open a terminal (or a new tmux
+# ZSH has a strict load order. Every time you open a terminal (or a new herdr
 # pane, or run `exec zsh`) ZSH loads files in this sequence:
 #
 #   .zshenv   → always (scripts, SSH, non-interactive, everything)

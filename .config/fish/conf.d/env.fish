@@ -106,3 +106,17 @@ end
 # ── Homebrew ──────────────────────────────────────────────────────────────
 set -gx HOMEBREW_NO_ANALYTICS 1
 set -gx HOMEBREW_NO_AUTO_UPDATE 1
+
+# ── Privacy / telemetry opt-outs ──────────────────────────────────────────
+# Mirrors zsh .zshenv
+set -gx DO_NOT_TRACK 1
+set -gx DISABLE_TELEMETRY 1
+set -gx DISABLE_ERROR_REPORTING 1
+set -gx VERCEL_PLUGIN_TELEMETRY off
+set -gx CAVEMAN_TELEMETRY 0
+set -gx NEXT_TELEMETRY_DISABLED 1
+set -gx TURBO_TELEMETRY_DISABLED 1
+set -gx EXPO_NO_TELEMETRY 1
+set -gx ASTRO_TELEMETRY_DISABLED 1
+set -gx GATSBY_TELEMETRY_DISABLED 1
+set -gx STORYBOOK_DISABLE_TELEMETRY 1

@@ -269,97 +269,62 @@ git-open() {
 }
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TMUX FUNCTIONS
+# ALIAS FUNCTIONS
 # ══════════════════════════════════════════════════════════════════════════════
 
-# fal — fuzzy alias finder: fal (all), fal git, fal tmux
+# fal — fuzzy alias finder: fal (all), fal git, fal pnpm
 # Browse every defined alias in fzf, pre-filtered by argument
 fal() {
   alias | sort | fzf --prompt='alias ❯ ' --query="$*" \
     --preview='echo {}' --preview-window='down:3:wrap'
 }
 
-# fts — fuzzy tmux session switcher
-# Shows all sessions in fzf, preview shows windows in that session
-fts() {
-  local session
-  session=$(tmux list-sessions -F '#{session_name}: #{session_windows} windows (#{window_name})' 2>/dev/null \
-    | fzf --prompt='tmux ❯ ' \
-          --preview='tmux list-windows -t {1}' \
-          --preview-window='down:4:wrap' \
-    | cut -d: -f1)
-  [[ -n "$session" ]] && tmux switch-client -t "$session"
-}
+# ══════════════════════════════════════════════════════════════════════════════
+# HERDR FUNCTIONS
+# ══════════════════════════════════════════════════════════════════════════════
 
-# tdev — spin up a structured dev session for a project
+# hdev — herdr dev workspace for a project: nvim left 70% + agent right 30%
+# Reuses the workspace if one with the project's name is already open.
+# Mirrors fish version: .config/fish/functions/hdev.fish
 #
-# what does this do?
-# Creates a tmux session named after the project with a sensible layout:
-#   Single window "dev": nvim left 70% + terminal right 30%
-# If the session already exists, just attaches to it.
-# Mirrors fish version: .config/fish/functions/tdev.fish
-#
-# Usage: tdev (uses cwd), tdev myproject (resolves via zoxide), tdev ./path
-tdev() {
-  local name root auto_derived
-  name="$(basename "$PWD")"
-  root="$PWD"
-  # true when name/root came from a resolved path (0 args, a dir arg, or a
-  # zoxide hit) rather than a literal name the user typed on purpose
-  auto_derived=true
-  if [[ $# -ge 2 ]]; then
-    name="$1"
-    root="$2"
-    auto_derived=false
-  elif [[ $# -eq 1 ]]; then
+# Usage: hdev (uses cwd), hdev myproject (resolves via zoxide), hdev ./path,
+#        hdev -a codex ./path  (agent: claude [default] | codex | opencode)
+hdev() {
+  local agent=claude root="$PWD" name ws editor side
+  if [[ "$1" == "-a" ]]; then agent="$2"; shift 2; fi
+
+  if [[ $# -ge 1 ]]; then
     if [[ -d "$1" ]]; then
-      # arg is a path — use it directly
       root="$(realpath "$1")"
-      name="$(basename "$root")"
     else
       # resolve project path via zoxide (like `z <name>`)
-      local zdir
-      zdir="$(zoxide query "$1" 2>/dev/null)"
-      if [[ -n "$zdir" ]]; then
-        root="$zdir"
-        name="$(basename "$root")"
-      else
-        name="$1"
-        auto_derived=false
-      fi
+      root="$(zoxide query "$1" 2>/dev/null)"
+      [[ -z "$root" ]] && { echo "hdev: no directory matches '$1'" >&2; return 1; }
     fi
   fi
+  name="$(basename "$root")"
 
-  if [[ "$auto_derived" == true ]]; then
-    # disambiguate folders that share a basename under different parents
-    # (e.g. two repos each with a "mobile/" dir) — without this, tdev would
-    # find the OTHER project's session already running under the same short
-    # name and switch you into it instead of making a new one
-    local hash
-    hash="$(echo -n "$root" | md5sum | cut -c1-6)"
-    name="${name}-${hash}"
+  [[ "$HERDR_ENV" == 1 ]] || { echo "hdev: run inside herdr (start it with: herdr)" >&2; return 1; }
+
+  ws="$(herdr workspace list | jq -r --arg l "$name" '.result.workspaces[] | select(.label == $l) | .workspace_id' | head -1)"
+  if [[ -n "$ws" && "$ws" != "$HERDR_WORKSPACE_ID" ]]; then
+    herdr workspace focus "$ws" >/dev/null
+    return
   fi
 
-  # tmux session names can't contain . or : (target separators)
-  name="${name//./_}"
-
-  # Create session if it doesn't exist (-d = detached, don't attach yet)
-  if ! tmux has-session -t "${name}" 2>/dev/null; then
-    tmux new-session -d -s "${name}" -c "$root"
-
-    # Single window: nvim left 70% + terminal right 30%
-    tmux rename-window -t "${name}:1" 'dev'
-    tmux split-window -t "${name}:dev" -h -l 30% -c "$root"
-    tmux select-pane -t "${name}:dev.left"
-    tmux send-keys -t "${name}:dev.left" 'nvim .' Enter
+  # already in this project's workspace: build the layout right here
+  if [[ -n "$ws" ]]; then
+    side="$(herdr pane split --current --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
+    herdr pane run "$side" "$agent" >/dev/null
+    cd "$root" && nvim .
+    return
   fi
 
-  # Attach (or switch if inside tmux already)
-  if [[ -n "$TMUX" ]]; then
-    tmux switch-client -t "${name}"
-  else
-    tmux attach-session -t "${name}"
-  fi
+  editor="$(herdr workspace create --cwd "$root" --label "$name" --focus | jq -r .result.root_pane.pane_id)"
+  # --ratio is the share kept by the original (left) pane
+  side="$(herdr pane split "$editor" --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
+  herdr pane run "$editor" 'nvim .' >/dev/null
+  herdr pane run "$side" "$agent" >/dev/null
 }
 
 # ══════════════════════════════════════════════════════════════════════════════

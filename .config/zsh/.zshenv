@@ -118,3 +118,17 @@ export FZF_CTRL_T_OPTS="--preview 'bat --color=always --line-range=:100 {}'"
 export FZF_ALT_C_OPTS="--preview 'eza --icons --tree --level=2 --color=always {}'"
 export FZF_CTRL_R_OPTS="--preview 'echo {}' --preview-window=down:3:wrap"
 
+
+# ── Privacy / telemetry opt-outs ──────────────────────────────────────────
+# Mirrored in fish conf.d/env.fish and agents/claude/settings.base.json.
+export DO_NOT_TRACK=1                       # generic convention (Caveman CLI, others)
+export DISABLE_TELEMETRY=1                  # Claude Code usage metrics
+export DISABLE_ERROR_REPORTING=1            # Claude Code error reports
+export VERCEL_PLUGIN_TELEMETRY=off          # Vercel Claude plugin
+export CAVEMAN_TELEMETRY=0                  # Caveman CLI
+export NEXT_TELEMETRY_DISABLED=1            # Next.js
+export TURBO_TELEMETRY_DISABLED=1           # Turborepo
+export EXPO_NO_TELEMETRY=1                  # Expo
+export ASTRO_TELEMETRY_DISABLED=1           # Astro
+export GATSBY_TELEMETRY_DISABLED=1          # Gatsby
+export STORYBOOK_DISABLE_TELEMETRY=1        # Storybook

@@ -61,10 +61,7 @@ Yazi detects the best available image protocol:
 | Context | Protocol | Quality |
 |---|---|---|
 | Ghostty (direct) | Kitty Graphics Protocol | Full resolution |
-| Inside tmux | Chafa (fallback) | ASCII art |
-
-To get full image preview in tmux, `TERM_PROGRAM` must propagate through.
-`tmux/options.conf` has `allow-passthrough on` + `update-environment TERM_PROGRAM` for this.
+| Inside herdr | Kitty Graphics Protocol, passed through by herdr (`[terminal] kitty_graphics = true`) | Full resolution |
 
 ---
 
