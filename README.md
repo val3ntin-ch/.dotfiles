@@ -338,7 +338,7 @@ Prefix is `Ctrl+t` (same as the old tmux setup).
 
 | Keys | Action |
 |---|---|
-| `hdev [-o] [-n] [-a codex\|opencode] [dir\|zoxide-query]` | Open nvim (left 70%) + an agent (right 30%, default claude) for a project. What already runs is focused, not duplicated; idle shell panes in the project's workspace are reused before splitting new ones. Inside a git repo it uses the repo root. Always prints what it did; herdr errors point to `doctor.sh`. `-o` agent only, `-n` forces a new workspace |
+| `hdev [-o] [-n] [-a codex\|opencode] [dir\|zoxide-query]` | Open nvim (left 70%) + an agent (right 30%, default claude) for a project. What already runs is focused, not duplicated. Free panes are used first — the pane you typed `hdev` in (when it's the project's workspace), then idle shell panes — and a pane is split only when none is free. Inside a git repo it uses the repo root. Always prints what it did; herdr errors point to `doctor.sh`. `-o` agent only, `-n` forces a new workspace |
 | `Ctrl+h/j/k/l` in nvim | Move between nvim splits, then into the neighbouring herdr pane |
 | `prefix h/j/k/l` | Move between herdr panes (from a shell/agent pane) |
 | `prefix g` / `prefix v` | Split side by side / stacked |
