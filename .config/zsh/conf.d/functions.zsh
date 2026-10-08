@@ -283,6 +283,21 @@ fal() {
 # HERDR FUNCTIONS
 # ══════════════════════════════════════════════════════════════════════════════
 
+# _hdev_add_editor — `hdev -e` on a project whose agent already runs: add nvim
+# left of that agent (70/30) unless a pane in the workspace already runs nvim.
+# Never starts an agent.
+_hdev_add_editor() {
+  local agent_pane="$1" root="$2" p ed
+  for p in $(herdr pane list --workspace "${agent_pane%%:*}" | jq -r '.result.panes[].pane_id'); do
+    herdr pane process-info --pane "$p" \
+      | jq -e '.result.process_info.foreground_processes[] | select(.argv0 == "nvim")' >/dev/null && return
+  done
+  # split leaves the agent in the left 70% slot; swap moves nvim into it
+  ed="$(herdr pane split "$agent_pane" --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
+  herdr pane swap --source-pane "$agent_pane" --target-pane "$ed" >/dev/null
+  herdr pane run "$ed" 'nvim .' >/dev/null
+}
+
 # hdev — herdr workspace for a project: agent, plus nvim with -e
 # Without -n, an agent already running in the project is focused instead of
 # starting a duplicate. Mirrors fish version: .config/fish/functions/hdev.fish
@@ -321,6 +336,7 @@ hdev() {
     running="$(herdr agent list | jq -r --arg r "$root" --arg a "$agent" '.result.agents[] | select(.cwd == $r and .agent == $a) | .pane_id' | head -1)"
     if [[ -n "$running" ]]; then
       herdr agent focus "$running" >/dev/null
+      (( editor )) && _hdev_add_editor "$running" "$root"
       return
     fi
     ws="$(herdr workspace list | jq -r --arg l "$name" '.result.workspaces[] | select(.label == $l) | .workspace_id' | head -1)"

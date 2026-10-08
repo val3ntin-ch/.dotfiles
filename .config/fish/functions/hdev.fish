@@ -34,6 +34,7 @@ function hdev -d "Herdr workspace for a project: agent (+ nvim with -e)"
         set -l running (herdr agent list | jq -r --arg r $root --arg a $agent '.result.agents[] | select(.cwd == $r and .agent == $a) | .pane_id' | head -1)
         if test -n "$running"
             herdr agent focus $running >/dev/null
+            set -q _flag_editor; and _hdev_add_editor $running $root
             return
         end
     end
@@ -60,4 +61,17 @@ function hdev -d "Herdr workspace for a project: agent (+ nvim with -e)"
     else
         herdr pane run $main $agent >/dev/null
     end
+end
+
+# -e on a project whose agent already runs: add nvim left of that agent (70/30)
+# unless some pane in the workspace already runs nvim. Never starts an agent.
+function _hdev_add_editor -a agent_pane root
+    set -l ws (string split -f1 : $agent_pane)
+    for p in (herdr pane list --workspace $ws | jq -r '.result.panes[].pane_id')
+        herdr pane process-info --pane $p | jq -e '.result.process_info.foreground_processes[] | select(.argv0 == "nvim")' >/dev/null; and return
+    end
+    # split leaves the agent in the left 70% slot; swap moves nvim into it
+    set -l ed (herdr pane split $agent_pane --direction right --ratio 0.7 --cwd $root --no-focus | jq -r .result.pane.pane_id)
+    herdr pane swap --source-pane $agent_pane --target-pane $ed >/dev/null
+    herdr pane run $ed 'nvim .' >/dev/null
 end
