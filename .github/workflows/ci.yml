@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distro: ["ubuntu:24.04", "fedora:latest", "archlinux:latest", "opensuse/tumbleweed:latest"]
+        distro: ["ubuntu:24.04", "fedora:latest", "archlinux:latest"]
     container: ${{ matrix.distro }}
     env:
       LOGIN_SHELL: none
@@ -59,7 +59,6 @@ jobs:
           if command -v apt-get >/dev/null; then apt-get update -qq && apt-get install -y -qq git ca-certificates
           elif command -v dnf >/dev/null; then dnf install -y -q git
           elif command -v pacman >/dev/null; then pacman -Sy --noconfirm --needed git
-          elif command -v zypper >/dev/null; then zypper -n -q install git tar gzip
           fi
 
       - uses: actions/checkout@v4

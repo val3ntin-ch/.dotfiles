@@ -82,13 +82,12 @@ git clone https://github.com/val3ntin-ch/.dotfiles ~/.dotfiles
 ```
 
 Works on any distro family with **apt** (Debian, Ubuntu, Mint, Pop!_OS),
-**dnf** (Fedora, RHEL, Alma, Rocky), **pacman** (Arch, Manjaro, EndeavourOS)
-or **zypper** (openSUSE), on x86_64 and aarch64. CI installs it on Ubuntu
-24.04, Fedora, Arch and openSUSE Tumbleweed on every PR.
+**dnf** (Fedora, RHEL, Alma, Rocky), or **pacman** (Arch, Manjaro, EndeavourOS), on x86_64 and aarch64. CI installs it on Ubuntu
+24.04, Fedora and Arch on every PR.
 
 How it gets each tool:
 
-1. **Native packages first** (apt/dnf/pacman/zypper) — names are mapped per
+1. **Native packages first** (apt/dnf/pacman) — names are mapped per
    distro; a name the distro doesn't have is skipped, not fatal.
 2. **Upstream fallback** for anything missing or too old, into `~/.local/bin`:
    GitHub releases (lazygit, eza, delta, vivid, ouch, yazi, gh, zoxide, fzf,
@@ -98,7 +97,7 @@ How it gets each tool:
 3. **npm (via fnm's Node LTS):** codex, pnpm, yarn, markdownlint-cli2,
    neovim, tree-sitter-cli.
 4. **Desktop only** (auto-detected, or `DESKTOP=1`/`0`): Ghostty from the
-   official repos where it exists (Arch, openSUSE; elsewhere a link to
+   official repos where it exists (Arch; elsewhere a link to
    ghostty.org's install docs) and JetBrains Mono + Symbols Nerd Fonts into
    `~/.local/share/fonts`.
 5. **Same shared steps as macOS** (`lib/install-common.sh`): stow, login
@@ -115,7 +114,7 @@ How it gets each tool:
 | Git clones | pyenv/pyenv, rbenv/rbenv, rbenv/ruby-build |
 | npm registry | @openai/codex, pnpm, yarn, markdownlint-cli2, neovim, tree-sitter-cli |
 
-Ghostty is installed only where an official distro repo has it (Arch, openSUSE);
+Ghostty is installed only where an official distro repo has it (Arch);
 elsewhere the script points to ghostty.org's install docs.
 
 Not on Linux: Conductor (macOS app), Homebrew. Debian/Ubuntu's `batcat` and
@@ -128,7 +127,7 @@ Not on Linux: Conductor (macOS app), Homebrew. Debian/Ubuntu's `batcat` and
 ```
 ~/.dotfiles/
 ├── install.sh              macOS bootstrap script
-├── installLinux.sh         Linux bootstrap (apt/dnf/pacman/zypper)
+├── installLinux.sh         Linux bootstrap (apt/dnf/pacman)
 ├── lib/install-common.sh   steps shared by both installers (not stowed)
 ├── installAi.sh            agent plugins/skills + agent configs (web) — macOS + Linux
 ├── installAiMobile.sh      installAi.sh + React Native skills
@@ -403,7 +402,7 @@ git history (gitleaks), `herdr config check`, stow into a fresh `$HOME`
 zsh/fish login shells actually load the env (`EDITOR`, `DO_NOT_TRACK`).
 
 The `linux-install` CI job runs `installLinux.sh` twice (a rerun must be safe)
-in Ubuntu 24.04, Fedora, Arch and openSUSE Tumbleweed containers, then `.github/check-linux-install.sh`:
+in Ubuntu 24.04, Fedora and Arch containers, then `.github/check-linux-install.sh`:
 every tool on PATH, nvim ≥ 0.11.2, `fzf --fish`, the npm toolchain, `herdr
 config check`, stow links, and fresh zsh/fish login shells loading the env.
 

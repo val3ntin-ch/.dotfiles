@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Linux bootstrap — same setup as install.sh (macOS) on any distro family:
 #   apt (Debian/Ubuntu/Mint/Pop) · dnf (Fedora/RHEL/Alma/Rocky) ·
-#   pacman (Arch/Manjaro/EndeavourOS) · zypper (openSUSE)
+#   pacman (Arch/Manjaro/EndeavourOS)
 # Native packages first; anything the distro lacks or ships too old comes from
 # the tool's official installer or GitHub release, into ~/.local/bin.
 # Safe to rerun. Env overrides:
@@ -35,8 +35,7 @@ case " ${ID:-} ${ID_LIKE:-} " in
   *" arch "*|*" manjaro "*)                       PM=pacman ;;
   *" debian "*|*" ubuntu "*)                      PM=apt ;;
   *" fedora "*|*" rhel "*|*" centos "*)           PM=dnf ;;
-  *" suse "*|*" opensuse "*|*" opensuse-tumbleweed "*) PM=zypper ;;
-  *) echo "unsupported distro: ${PRETTY_NAME:-unknown} (need apt, dnf, pacman or zypper)" >&2; exit 1 ;;
+  *) echo "unsupported distro: ${PRETTY_NAME:-unknown} (need apt, dnf or pacman)" >&2; exit 1 ;;
 esac
 step "Distro: ${PRETTY_NAME:-$ID} ($PM, $RARCH)"
 
@@ -46,7 +45,6 @@ pm_refresh() {
     dnf)    $SUDO dnf -y -q makecache ;;
     # Arch doesn't support partial upgrades — sync + upgrade together
     pacman) $SUDO pacman -Syu --noconfirm >/dev/null ;;
-    zypper) $SUDO zypper -n -q --gpg-auto-import-keys refresh ;;
   esac
 }
 # pm_install pkg...  — one batch; if any name is unknown on this distro, retry
@@ -57,7 +55,6 @@ pm_install() {
     apt)    install=(env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends) ;;
     dnf)    install=(dnf install -y -q) ;;
     pacman) install=(pacman -S --noconfirm --needed) ;;
-    zypper) install=(zypper -n -q install --no-recommends) ;;
   esac
   $SUDO "${install[@]}" "$@" >/dev/null 2>&1 && return
   local p out
@@ -135,16 +132,8 @@ case $PM in
   pacman) BASE=(base-devel curl git ca-certificates unzip xz file fontconfig sudo procps-ng findutils)
           PKGS=(zsh fish stow jq ripgrep fzf zoxide bat fd go github-cli git-delta eza lazygit
                 vivid ouch yazi starship neovim ffmpeg poppler imagemagick 7zip resvg python xclip wl-clipboard) ;;
-  zypper) BASE=(gcc gcc-c++ make curl git ca-certificates unzip xz file fontconfig sudo procps findutils)
-          PKGS=(zsh fish stow jq ripgrep fzf zoxide bat fd go gh git-delta eza lazygit
-                vivid neovim ffmpeg poppler-tools ImageMagick 7zip python3 xclip wl-clipboard) ;;
 esac
 pm_install "${BASE[@]}"
-# openSUSE minimal/container images ship busybox-gawk, which blocks real gawk
-# (fish needs awk). Swap only that stub; never force-resolve anything else.
-if [[ $PM == zypper ]] && rpm -q busybox-gawk >/dev/null 2>&1; then
-  $SUDO zypper -n -q install --force-resolution gawk >/dev/null
-fi
 pm_install "${PKGS[@]}"
 # Debian/Ubuntu ship bat as `batcat` and fd as `fdfind`
 have bat || { have batcat && link "$(command -v batcat)" bat; }
@@ -213,10 +202,10 @@ fi
 if [[ "$DESKTOP" == 1 ]]; then
   step "Ghostty + Nerd Fonts"
   if ! have ghostty; then
-    # official distro repos only (Arch extra, openSUSE) — COPR/snap/PPA builds
+    # official distro repos only (Arch extra) — COPR/snap/PPA builds
     # are third-party, so other distros get a pointer to Ghostty's own docs
     case $PM in
-      pacman|zypper) pm_install ghostty ;;
+      pacman) pm_install ghostty ;;
     esac
     have ghostty || echo "  Ghostty: not in official $PM repos — install per https://ghostty.org/docs/install/binary"
   fi
