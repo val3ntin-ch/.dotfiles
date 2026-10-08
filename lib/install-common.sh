@@ -61,7 +61,10 @@ fish_plugins() {
 herdr_integrations() {
   step "Herdr agent integrations"
   # hooks that report each agent's state (working / waiting / done) to herdr's
-  # sidebar — idempotent, rewrites to the current version on rerun
+  # sidebar — idempotent, rewrites to the current version on rerun.
+  # Each agent creates its config dir on first launch; create them now so the
+  # hooks install on a fresh machine before any agent has run.
+  mkdir -p "$HOME/.claude" "$HOME/.codex" "$HOME/.config/opencode"
   for agent in claude codex opencode; do
     herdr integration install "$agent"
   done
@@ -72,7 +75,10 @@ node_lts() {
   step "Node LTS"
   eval "$(fnm env --log-level quiet)"
   fnm install --lts
-  npm install -g neovim tree-sitter-cli "$@"
+  # npm blocks package install scripts by default; allow them only for the
+  # packages that need one (tree-sitter-cli fetches its binary, pnpm/yarn
+  # set up their shims) — never a blanket allow
+  npm install -g --allow-scripts=tree-sitter-cli,pnpm,yarn neovim tree-sitter-cli "$@"
 }
 
 yazi_plugins() {
