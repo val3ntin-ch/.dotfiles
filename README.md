@@ -128,6 +128,7 @@ Not on Linux: Conductor (macOS app), Homebrew. Debian/Ubuntu's `batcat` and
 ~/.dotfiles/
 ├── install.sh              macOS bootstrap script
 ├── installLinux.sh         Linux bootstrap (apt/dnf/pacman)
+├── doctor.sh               repair + health check, any machine
 ├── lib/install-common.sh   steps shared by both installers (not stowed)
 ├── installAi.sh            agent plugins/skills + agent configs (web) — macOS + Linux
 ├── installAiMobile.sh      installAi.sh + React Native skills
@@ -287,6 +288,21 @@ exec fish         # or: exec zsh — restart shell to pick up changes
 Configs are symlinks, so `git pull` updates them in place — no re-stow needed
 unless files were added/moved. Herdr: `Ctrl+t r` reloads the config.
 
+**Something not working (hdev, shells, a tool)? Run the doctor:**
+
+```bash
+~/.dotfiles/doctor.sh           # repair, then check
+~/.dotfiles/doctor.sh --check   # check only, changes nothing
+```
+
+Repairs (safe to repeat): pull the latest dotfiles (fast-forward only), remove
+stale non-Homebrew copies of herdr/gh that shadow Homebrew's (macOS), re-stow,
+clear zsh completion/antidote caches, sync fish plugins, restore nvim plugins
+to `lazy-lock.json`, sync yazi plugins, reinstall herdr agent hooks and reload
+the herdr config. Then it checks every tool, that herdr supports what `hdev`
+uses, fresh login shells, `hdev` in fish and zsh, git identity and `gh` auth —
+every ✗ comes with its fix. Afterwards restart open shells: `exec $SHELL`.
+
 **Re-stow after adding or moving dotfiles:**
 
 ```bash
@@ -322,7 +338,7 @@ Prefix is `Ctrl+t` (same as the old tmux setup).
 
 | Keys | Action |
 |---|---|
-| `hdev [-e] [-n] [-a codex\|opencode] [dir\|zoxide-query]` | Open an agent for a project (default: claude). If that agent already runs there, focus it instead of starting another. `-e` adds nvim (70%, agent 30%), `-n` forces a new workspace |
+| `hdev [-e] [-n] [-a codex\|opencode] [dir\|zoxide-query]` | Open an agent for a project (default: claude). If that agent already runs there, focus it instead of starting another. Inside a git repo it uses the repo root. herdr errors are printed, with a pointer to `doctor.sh`. `-e` adds nvim (70%, agent 30%), `-n` forces a new workspace |
 | `Ctrl+h/j/k/l` in nvim | Move between nvim splits, then into the neighbouring herdr pane |
 | `prefix h/j/k/l` | Move between herdr panes (from a shell/agent pane) |
 | `prefix g` / `prefix v` | Split side by side / stacked |
