@@ -16,7 +16,8 @@ stow_dotfiles() {
     # skip if missing, a symlink, or already resolving into the repo
     # (folded stow dirs make repo files look like real files at $HOME)
     [[ -e "$target" && ! -L "$target" ]] || continue
-    [[ "$(realpath "$target")" == "$DOTFILES"/* ]] && continue
+    # perl, not realpath(1): macOS only ships realpath since 13
+    [[ "$(perl -MCwd -e 'print Cwd::abs_path(shift)' "$target")" == "$DOTFILES"/* ]] && continue
     mv "$target" "$target.bak"
     echo "  conflict backed up: $target → $target.bak"
   done

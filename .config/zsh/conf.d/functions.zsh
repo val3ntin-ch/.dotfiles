@@ -306,13 +306,16 @@ _hdev_add_editor() {
   panes="$(_hdev_h pane list --workspace "${agent_pane%%:*}")" || return 1
   for p in $(jq -r '.result.panes[].pane_id' <<<"$panes"); do
     info="$(_hdev_h pane process-info --pane "$p")" || return 1
-    jq -e '.result.process_info.foreground_processes[] | select(.argv0 == "nvim")' >/dev/null <<<"$info" && return
+    if jq -e '.result.process_info.foreground_processes[] | select(.argv0 == "nvim")' >/dev/null <<<"$info"; then
+      echo "hdev: nvim already open in this workspace (pane $p)"
+      return
+    fi
   done
   # split leaves the agent in the left 70% slot; swap moves nvim into it
   ed="$(_hdev_h pane split "$agent_pane" --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
   [[ -n "$ed" ]] || return 1
   _hdev_h pane swap --source-pane "$agent_pane" --target-pane "$ed" >/dev/null || return 1
-  _hdev_h pane run "$ed" 'nvim .' >/dev/null
+  _hdev_h pane run "$ed" "cd ${(q)root} && nvim ." >/dev/null
 }
 
 # hdev — herdr workspace for a project: agent, plus nvim with -e
@@ -348,9 +351,13 @@ hdev() {
       [[ -z "$root" ]] && { echo "hdev: no directory matches '$1'" >&2; return 1; }
     fi
   fi
-  # resolved path: herdr reports agent cwds resolved (/tmp → /private/tmp)
-  root="$(realpath "$root")"
-  name="$(basename "$root")"
+  # resolved path: herdr reports agent cwds resolved (/tmp → /private/tmp).
+  # zsh's :A modifier, not realpath(1) — macOS only ships that since 13.
+  root="${root:A}"
+  name="${root:t}"
+  # explicit cd: nvim/agent must open the repo even if the new pane's shell
+  # starts somewhere else (rc files, herdr cwd fallback to $HOME)
+  local go="cd ${(q)root} &&"
 
   [[ "$HERDR_ENV" == 1 ]] || { echo "hdev: run inside herdr (start it with: herdr)" >&2; return 1; }
   command -v jq >/dev/null || { echo "hdev: jq not found — run ~/.dotfiles/doctor.sh" >&2; return 1; }
@@ -384,10 +391,10 @@ hdev() {
     # --ratio is the share kept by the original (left) pane
     side="$(_hdev_h pane split "$main" --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
     [[ -n "$side" ]] || return 1
-    _hdev_h pane run "$main" 'nvim .' >/dev/null || return 1
-    _hdev_h pane run "$side" "$agent" >/dev/null
+    _hdev_h pane run "$main" "$go nvim ." >/dev/null || return 1
+    _hdev_h pane run "$side" "$go $agent" >/dev/null
   else
-    _hdev_h pane run "$main" "$agent" >/dev/null
+    _hdev_h pane run "$main" "$go $agent" >/dev/null
   fi
 }
 
