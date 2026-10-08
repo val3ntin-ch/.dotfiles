@@ -452,7 +452,7 @@ Different from `gwip` (which uses `--no-verify` and removes deleted files).
 
 #### `unwip`
 Undo the last `wip` commit. Checks the commit message starts with `wip:`.
-Keeps all changes staged (`git reset HEAD~1`).
+Keeps all changes in the working tree, unstaged (`git reset HEAD~1`) — `git add` them before committing again.
 
 #### `gsync`
 Fetch + rebase current branch on `origin/<main-branch>`.

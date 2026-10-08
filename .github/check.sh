@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Repo health checks — run by CI on every PR, and locally before pushing:
 #   .github/check.sh
-# Needs: bash zsh fish shellcheck lua(luac) python3 stow gitleaks herdr
+# Needs: bash zsh fish shellcheck lua(luac) python3>=3.11 (tomllib) stow gitleaks herdr
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -35,6 +35,9 @@ while IFS= read -r -d '' f; do
 done < <(tracked '*.lua')
 
 section "TOML / JSON parse"
+# tomllib is Python 3.11+; macOS's /usr/bin/python3 is older — use Homebrew's
+python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))' \
+  || fail "python3 >= 3.11 required (found $(python3 --version 2>&1)) — brew install python"
 tracked '*.toml' '*.json' | python3 -c '
 import sys, json, tomllib
 bad = 0
@@ -50,13 +53,16 @@ sys.exit(bad)
 ' || fail "toml/json parse"
 
 section "No machine-specific home paths"
-# configs must use ~ / $HOME — a hardcoded /Users/<name> breaks every other machine
-if git grep -nIE '/(Users|home)/[a-z][a-z0-9_-]*/' -- ':!.github/check.sh'; then
+# configs must use ~ / $HOME — a hardcoded /Users/<name> breaks every other machine.
+# Any account-name characters, with or without a trailing path or quotes.
+if git grep -nIE '/(Users|home)/[A-Za-z0-9._-]+' -- ':!.github/check.sh'; then
   fail "hardcoded home path"
 fi
 
 section "Secrets (gitleaks)"
-gitleaks dir . --no-banner --redact || fail "gitleaks"
+gitleaks dir . --no-banner --redact || fail "gitleaks: working tree"
+# full history: a secret committed and later deleted is still public
+gitleaks git . --no-banner --redact || fail "gitleaks: git history"
 
 section "Herdr config"
 TMP_HOME="$(mktemp -d)"
