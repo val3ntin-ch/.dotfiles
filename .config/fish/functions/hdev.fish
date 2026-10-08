@@ -27,6 +27,9 @@ function hdev -d "Herdr workspace for a project: agent (+ nvim with -e)"
     # resolved path: herdr reports agent cwds resolved (/tmp → /private/tmp)
     set root (realpath $root)
     set -l name (basename $root)
+    # explicit cd: nvim/agent must open the repo even if the new pane's shell
+    # starts somewhere else (rc files, herdr cwd fallback to $HOME)
+    set -l go "cd "(string escape -- $root)" &&"
 
     if test "$HERDR_ENV" != 1
         echo "hdev: run inside herdr (start it with: herdr)" >&2
@@ -70,10 +73,10 @@ function hdev -d "Herdr workspace for a project: agent (+ nvim with -e)"
         # --ratio is the share kept by the original (left) pane
         set -l side (_hdev_h pane split $main --direction right --ratio 0.7 --cwd $root --no-focus | jq -r .result.pane.pane_id)
         test -n "$side"; or return 1
-        _hdev_h pane run $main 'nvim .' >/dev/null; or return 1
-        _hdev_h pane run $side $agent >/dev/null
+        _hdev_h pane run $main "$go nvim ." >/dev/null; or return 1
+        _hdev_h pane run $side "$go $agent" >/dev/null
     else
-        _hdev_h pane run $main $agent >/dev/null
+        _hdev_h pane run $main "$go $agent" >/dev/null
     end
 end
 
@@ -100,11 +103,14 @@ function _hdev_add_editor -a agent_pane root
     set -l panes (_hdev_h pane list --workspace $ws); or return 1
     for p in (printf '%s\n' $panes | jq -r '.result.panes[].pane_id')
         set -l info (_hdev_h pane process-info --pane $p); or return 1
-        printf '%s\n' $info | jq -e '.result.process_info.foreground_processes[] | select(.argv0 == "nvim")' >/dev/null; and return
+        if printf '%s\n' $info | jq -e '.result.process_info.foreground_processes[] | select(.argv0 == "nvim")' >/dev/null
+            echo "hdev: nvim already open in this workspace (pane $p)"
+            return
+        end
     end
     # split leaves the agent in the left 70% slot; swap moves nvim into it
     set -l ed (_hdev_h pane split $agent_pane --direction right --ratio 0.7 --cwd $root --no-focus | jq -r .result.pane.pane_id)
     test -n "$ed"; or return 1
     _hdev_h pane swap --source-pane $agent_pane --target-pane $ed >/dev/null; or return 1
-    _hdev_h pane run $ed 'nvim .' >/dev/null
+    _hdev_h pane run $ed "cd "(string escape -- $root)" && nvim ." >/dev/null
 end
