@@ -63,7 +63,7 @@ pm_install() {
   local p out
   for p in "$@"; do
     out="$($SUDO "${install[@]}" "$p" 2>&1)" \
-      || echo "  (not installed via $PM: $p — $(tail -1 <<<"$out")) — fallback below if needed"
+      || echo "  (not installed via $PM: $p — $(grep -m1 -iE 'problem|conflict|error|not found|no provider' <<<"$out" || tail -1 <<<"$out")) — fallback below if needed"
   done
 }
 
