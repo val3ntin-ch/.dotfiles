@@ -283,30 +283,48 @@ fal() {
 # HERDR FUNCTIONS
 # ══════════════════════════════════════════════════════════════════════════════
 
+# _hdev_h <herdr args> — run herdr; on failure print herdr's own error message
+# (it answers JSON {"error":{"message":…}}) instead of failing silently
+_hdev_h() {
+  local out st msg
+  out="$(herdr "$@" 2>&1)"; st=$?
+  msg="$(jq -r '.error.message // empty' <<<"$out" 2>/dev/null)"
+  if (( st != 0 )) || [[ -n "$msg" ]]; then
+    echo "hdev: \`herdr $1 $2\` failed: ${msg:-$out}" >&2
+    echo "      run ~/.dotfiles/doctor.sh to diagnose" >&2
+    return 1
+  fi
+  printf '%s\n' "$out"
+}
+
 # _hdev_add_editor — `hdev -e` on a project whose agent already runs: add nvim
 # left of that agent (70/30) unless a pane in the workspace already runs nvim.
 # Never starts an agent.
 _hdev_add_editor() {
   local agent_pane="$1" root="$2" p ed
-  for p in $(herdr pane list --workspace "${agent_pane%%:*}" | jq -r '.result.panes[].pane_id'); do
-    herdr pane process-info --pane "$p" \
+  for p in $(_hdev_h pane list --workspace "${agent_pane%%:*}" | jq -r '.result.panes[].pane_id'); do
+    _hdev_h pane process-info --pane "$p" \
       | jq -e '.result.process_info.foreground_processes[] | select(.argv0 == "nvim")' >/dev/null && return
   done
   # split leaves the agent in the left 70% slot; swap moves nvim into it
-  ed="$(herdr pane split "$agent_pane" --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
-  herdr pane swap --source-pane "$agent_pane" --target-pane "$ed" >/dev/null
-  herdr pane run "$ed" 'nvim .' >/dev/null
+  ed="$(_hdev_h pane split "$agent_pane" --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
+  [[ -n "$ed" ]] || return 1
+  _hdev_h pane swap --source-pane "$agent_pane" --target-pane "$ed" >/dev/null || return 1
+  _hdev_h pane run "$ed" 'nvim .' >/dev/null
 }
 
 # hdev — herdr workspace for a project: agent, plus nvim with -e
 # Without -n, an agent already running in the project is focused instead of
-# starting a duplicate. Mirrors fish version: .config/fish/functions/hdev.fish
+# starting a duplicate. With no argument inside a git repo, the project is the
+# repo root (not the subfolder you're in). Every herdr error is printed — run
+# ~/.dotfiles/doctor.sh if one appears.
+# Mirrors fish version: .config/fish/functions/hdev.fish
 #
 # Usage: hdev [-e] [-n] [-a claude|codex|opencode] [dir | zoxide-query]
 #   -e  also open nvim (left 70%, agent right 30%)
 #   -n  always open a new workspace, even if the project already has one
 hdev() {
-  local agent=claude editor=0 new=0 root="$PWD" name ws running main first side opt
+  local agent=claude editor=0 new=0 root name ws running main first side opt json
   local OPTIND=1
   while getopts "a:en" opt; do
     case $opt in
@@ -318,48 +336,56 @@ hdev() {
   done
   shift $((OPTIND - 1))
 
+  root="$(git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
   if [[ $# -ge 1 ]]; then
     if [[ -d "$1" ]]; then
-      root="$(realpath "$1")"
+      root="$1"
     else
       # resolve project path via zoxide (like `z <name>`)
       root="$(zoxide query "$1" 2>/dev/null)"
       [[ -z "$root" ]] && { echo "hdev: no directory matches '$1'" >&2; return 1; }
     fi
   fi
+  # resolved path: herdr reports agent cwds resolved (/tmp → /private/tmp)
+  root="$(realpath "$root")"
   name="$(basename "$root")"
 
   [[ "$HERDR_ENV" == 1 ]] || { echo "hdev: run inside herdr (start it with: herdr)" >&2; return 1; }
+  command -v jq >/dev/null || { echo "hdev: jq not found — run ~/.dotfiles/doctor.sh" >&2; return 1; }
 
   if (( ! new )); then
     # same agent already running in this project → just go there
-    running="$(herdr agent list | jq -r --arg r "$root" --arg a "$agent" '.result.agents[] | select(.cwd == $r and .agent == $a) | .pane_id' | head -1)"
+    json="$(_hdev_h agent list)" || return 1
+    running="$(jq -r --arg r "$root" --arg a "$agent" '.result.agents[] | select(.cwd == $r and .agent == $a) | .pane_id' <<<"$json" | head -1)"
     if [[ -n "$running" ]]; then
-      herdr agent focus "$running" >/dev/null
+      _hdev_h agent focus "$running" >/dev/null || return 1
       (( editor )) && _hdev_add_editor "$running" "$root"
       return
     fi
-    ws="$(herdr workspace list | jq -r --arg l "$name" '.result.workspaces[] | select(.label == $l) | .workspace_id' | head -1)"
+    json="$(_hdev_h workspace list)" || return 1
+    ws="$(jq -r --arg l "$name" '.result.workspaces[] | select(.label == $l) | .workspace_id' <<<"$json" | head -1)"
   fi
 
   if [[ -n "$ws" && "$ws" == "$HERDR_WORKSPACE_ID" ]]; then
     # already in the project's workspace: add the agent beside this pane
-    main="$(herdr pane split --current --direction right --ratio 0.5 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
+    main="$(_hdev_h pane split --current --direction right --ratio 0.5 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
   elif [[ -n "$ws" ]]; then
-    herdr workspace focus "$ws" >/dev/null
-    first="$(herdr pane list --workspace "$ws" | jq -r '.result.panes[0].pane_id')"
-    main="$(herdr pane split "$first" --direction right --ratio 0.5 --cwd "$root" --focus | jq -r .result.pane.pane_id)"
+    _hdev_h workspace focus "$ws" >/dev/null || return 1
+    first="$(_hdev_h pane list --workspace "$ws" | jq -r '.result.panes[0].pane_id')"
+    main="$(_hdev_h pane split "$first" --direction right --ratio 0.5 --cwd "$root" --focus | jq -r .result.pane.pane_id)"
   else
-    main="$(herdr workspace create --cwd "$root" --label "$name" --focus | jq -r .result.root_pane.pane_id)"
+    main="$(_hdev_h workspace create --cwd "$root" --label "$name" --focus | jq -r .result.root_pane.pane_id)"
   fi
+  [[ -n "$main" ]] || return 1
 
   if (( editor )); then
     # --ratio is the share kept by the original (left) pane
-    side="$(herdr pane split "$main" --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
-    herdr pane run "$main" 'nvim .' >/dev/null
-    herdr pane run "$side" "$agent" >/dev/null
+    side="$(_hdev_h pane split "$main" --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
+    [[ -n "$side" ]] || return 1
+    _hdev_h pane run "$main" 'nvim .' >/dev/null || return 1
+    _hdev_h pane run "$side" "$agent" >/dev/null
   else
-    herdr pane run "$main" "$agent" >/dev/null
+    _hdev_h pane run "$main" "$agent" >/dev/null
   fi
 }
 

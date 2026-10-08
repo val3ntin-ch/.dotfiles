@@ -492,7 +492,8 @@ Open an agent for a project (default `claude`; `-a codex` / `-a opencode`).
 If that agent already runs in the project, focuses it instead of starting a
 duplicate. Otherwise adds it to the project's workspace (or creates one).
 `-e` also opens `nvim .` (left 70%, agent right 30%); `-n` always creates a new
-workspace. Must run inside herdr.
+workspace. With no argument inside a git repo, the project is the repo root.
+Must run inside herdr; any herdr error is printed (then run `~/.dotfiles/doctor.sh`).
 
 ---
 

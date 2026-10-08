@@ -26,3 +26,4 @@ installLinux\.sh
 
 # ── CI (GitHub only, not stowed) ─────────────────────────────────────────────
 ^/\.github
+doctor\.sh
