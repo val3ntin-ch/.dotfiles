@@ -372,37 +372,3 @@ brew uninstall tmux sesh             # optional, no longer used
 fish -c 'fisher update'              # drops tmux.fish
 nvim --headless "+Lazy! clean" +qa   # drops vim-tmux-navigator
 ```
-
----
-
-## Contributing / CI
-
-`main` is protected: every change goes through a pull request, and the `CI`
-workflow (`.github/workflows/ci.yml`) must pass before merging.
-
-```bash
-git switch -c my-change
-# edit, then run the same checks CI runs:
-.github/check.sh
-git add -A && git commit -m "..."   # -A: also stages new files
-git push -u origin my-change
-gh pr create            # body pre-filled from .github/pull_request_template.md
-gh pr merge --squash    # once CI is green; GitHub deletes the remote branch
-git switch main && git pull && git branch -d my-change
-```
-
-Every PR uses the same template: What · Why · Changes · How it was tested ·
-After merging.
-
-`.github/check.sh` (needs Python ≥ 3.11 — Homebrew's `python3`, not macOS's
-3.9) checks: bash/zsh/fish/lua syntax, shellcheck, TOML/JSON parsing,
-hardcoded home paths (`/Users/…`, `/home/…`), secrets in files and in the full
-git history (gitleaks), `herdr config check`, stow into a fresh `$HOME`
-(nothing repo-only leaks), and that fresh
-zsh/fish login shells actually load the env (`EDITOR`, `DO_NOT_TRACK`).
-
-The `linux-install` CI job runs `installLinux.sh` twice (a rerun must be safe)
-in Ubuntu 24.04, Fedora and Arch containers, then `.github/check-linux-install.sh`:
-every tool on PATH, nvim ≥ 0.11.2, `fzf --fish`, the npm toolchain, `herdr
-config check`, stow links, and fresh zsh/fish login shells loading the env.
-
