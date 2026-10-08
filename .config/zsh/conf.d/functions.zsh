@@ -220,13 +220,13 @@ wip() {
   git commit -m "wip: $(date '+%Y-%m-%d %H:%M') [skip ci]"
 }
 
-# unwip — undo the last wip commit, keep changes staged
+# unwip — undo the last wip commit, keep changes (unstaged)
 unwip() {
   local msg
   msg=$(git log -1 --pretty=%s)
   if [[ "$msg" == wip:* ]]; then
     git reset HEAD~1
-    echo "wip commit undone, changes are staged"
+    echo "wip commit undone, changes kept, unstaged"
   else
     echo "last commit is not a wip commit: '$msg'"
     return 1

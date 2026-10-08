@@ -49,8 +49,10 @@ Open a new terminal when done. Fish is the default shell; zsh is fully configure
 | 10 | Install Node LTS via fnm + global npm packages (neovim, tree-sitter-cli) |
 | 11 | Install/upgrade Yazi plugins (`ya pkg upgrade`) |
 
-Rerunning is safe: installed brew packages are skipped, `chsh` and the Xcode
-license only prompt when something changes. Then run `./installAi.sh` (or
+Rerunning is safe: most installed brew packages are left as they are, but
+neovim and codex are upgraded on purpose, and fish plugins, yazi plugins, npm
+globals and the Xcode CLI tools are updated when newer versions exist. `chsh`
+and the Xcode license only prompt when something changes. Then run `./installAi.sh` (or
 `./installAiMobile.sh`) for agent plugins, skills and agent configs.
 
 **After install — one-time per machine:**
@@ -329,7 +331,8 @@ workflow (`.github/workflows/ci.yml`) must pass before merging.
 git switch -c my-change
 # edit, then run the same checks CI runs:
 .github/check.sh
-git commit -am "..." && git push -u origin my-change
+git add -A && git commit -m "..."   # -A: also stages new files
+git push -u origin my-change
 gh pr create            # body pre-filled from .github/pull_request_template.md
 gh pr merge --squash    # once CI is green; GitHub deletes the remote branch
 git switch main && git pull && git branch -d my-change
@@ -338,8 +341,10 @@ git switch main && git pull && git branch -d my-change
 Every PR uses the same template: What · Why · Changes · How it was tested ·
 After merging.
 
-`.github/check.sh` checks: bash/zsh/fish/lua syntax, shellcheck, TOML/JSON
-parsing, hardcoded `/Users/<name>` paths, secrets (gitleaks), `herdr config
-check`, stow into a fresh `$HOME` (nothing repo-only leaks), and that fresh
+`.github/check.sh` (needs Python ≥ 3.11 — Homebrew's `python3`, not macOS's
+3.9) checks: bash/zsh/fish/lua syntax, shellcheck, TOML/JSON parsing,
+hardcoded home paths (`/Users/…`, `/home/…`), secrets in files and in the full
+git history (gitleaks), `herdr config check`, stow into a fresh `$HOME`
+(nothing repo-only leaks), and that fresh
 zsh/fish login shells actually load the env (`EDITOR`, `DO_NOT_TRACK`).
 
