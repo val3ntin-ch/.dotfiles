@@ -2,7 +2,9 @@
 set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Linux: node/npx live under fnm — load it when run from a bare bash
+# Linux: fnm (linked into ~/.local/bin by installLinux.sh) provides node/npx —
+# a bare bash right after the install has neither on PATH yet
+export PATH="$HOME/.local/bin:$PATH"
 if ! command -v npx &>/dev/null && command -v fnm &>/dev/null; then eval "$(fnm env --log-level quiet)"; fi
 step() { printf '\n\033[1;36m==> %s\033[0m\n' "$1"; }
 

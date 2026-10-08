@@ -74,8 +74,8 @@ link() { ln -sf "$1" "$BIN/$(basename "${2:-$1}")"; }
 
 # gh_fetch <owner/repo> <asset-regex> <dest-file>
 # Downloads the first matching asset of the repo's latest GitHub release and
-# verifies it against the sha256 GitHub publishes for that asset — a mismatch
-# aborts. Only official upstream repos are passed in (see README "Sources").
+# verifies it against the sha256 GitHub publishes for that asset — a mismatch,
+# or an asset with no published sha256, is refused. Only official upstream repos are passed in (see README "Sources").
 # Uses GITHUB_TOKEN when set (CI rate limits).
 gh_fetch() {
   local repo="$1" pattern="$2" dest="$3" auth=() meta url digest
@@ -86,12 +86,12 @@ gh_fetch() {
   url="$(jq -r .browser_download_url <<<"$meta")"
   digest="$(jq -r '.digest // empty' <<<"$meta")"
   curl -fsSL "$url" -o "$dest"
-  if [[ "$digest" == sha256:* ]]; then
-    echo "${digest#sha256:}  $dest" | sha256sum -c --quiet - \
-      || { echo "  CHECKSUM MISMATCH for $url — not installing" >&2; rm -f "$dest"; return 1; }
-  else
-    echo "  warning: GitHub publishes no sha256 for $(basename "$url") — not verified" >&2
+  if [[ "$digest" != sha256:* ]]; then
+    echo "  REFUSED: GitHub publishes no sha256 for $(basename "$url") — cannot verify" >&2
+    rm -f "$dest"; return 1
   fi
+  echo "${digest#sha256:}  $dest" | sha256sum -c --quiet - \
+    || { echo "  CHECKSUM MISMATCH for $url — not installing" >&2; rm -f "$dest"; return 1; }
   basename "$url"
 }
 
@@ -168,7 +168,9 @@ have ouch    || gh_release ouch-org/ouch "${RUST}\\.tar\\.gz$" ouch
 have yazi    || gh_release sxyazi/yazi "${RUST}\\.zip$" yazi ya
 have gh      || gh_release cli/cli "linux_${GOARCH}\\.tar\\.gz$" gh
 have zoxide  || gh_release ajeetdsouza/zoxide "${RUST}\\.tar\\.gz$" zoxide
-have resvg   || gh_release linebender/resvg "resvg-linux-${RARCH}\\.tar\\.gz$" resvg || true
+# optional (SVG previews in yazi); upstream ships no aarch64 build
+have resvg   || gh_release linebender/resvg "resvg-linux-${RARCH}\\.tar\\.gz$" resvg \
+  || echo "  resvg unavailable for $RARCH — yazi SVG previews disabled (optional)"
 have starship || curl -fsSL https://starship.rs/install.sh | sh -s -- -y -b "$BIN" >/dev/null
 if ! have fnm; then
   curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir "$HOME/.local/share/fnm" --skip-shell >/dev/null
@@ -211,13 +213,16 @@ if [[ "$DESKTOP" == 1 ]]; then
     have ghostty || echo "  Ghostty: not in official $PM repos — install per https://ghostty.org/docs/install/binary"
   fi
   FONT_DIR="$HOME/.local/share/fonts/NerdFonts"
-  if [[ ! -d "$FONT_DIR" ]]; then
+  # marker written only after every font is in place — a failed or partial run
+  # is retried next time instead of being skipped
+  if [[ ! -f "$FONT_DIR/.installed" ]]; then
     mkdir -p "$FONT_DIR"
     for font in JetBrainsMono NerdFontsSymbolsOnly; do
       gh_fetch ryanoasis/nerd-fonts "^${font}\\.tar\\.xz$" "$FONT_DIR/$font.tar.xz" >/dev/null
       tar -xJf "$FONT_DIR/$font.tar.xz" -C "$FONT_DIR" && rm -f "$FONT_DIR/$font.tar.xz"
     done
     fc-cache -f "$FONT_DIR" >/dev/null
+    touch "$FONT_DIR/.installed"
   fi
 else
   step "Ghostty + Nerd Fonts — skipped (no desktop session; DESKTOP=1 to force)"

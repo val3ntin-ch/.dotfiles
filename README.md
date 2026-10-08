@@ -84,7 +84,7 @@ git clone https://github.com/val3ntin-ch/.dotfiles ~/.dotfiles
 Works on any distro family with **apt** (Debian, Ubuntu, Mint, Pop!_OS),
 **dnf** (Fedora, RHEL, Alma, Rocky), **pacman** (Arch, Manjaro, EndeavourOS)
 or **zypper** (openSUSE), on x86_64 and aarch64. CI installs it on Ubuntu
-24.04, Fedora and Arch on every PR.
+24.04, Fedora, Arch and openSUSE Tumbleweed on every PR.
 
 How it gets each tool:
 
@@ -97,9 +97,10 @@ How it gets each tool:
    for starship, fnm, herdr, Claude Code and OpenCode. pyenv/rbenv are cloned.
 3. **npm (via fnm's Node LTS):** codex, pnpm, yarn, markdownlint-cli2,
    neovim, tree-sitter-cli.
-4. **Desktop only** (auto-detected, or `DESKTOP=1`/`0`): Ghostty (pacman /
-   zypper native, Fedora COPR, snap on Ubuntu) and JetBrains Mono + Symbols
-   Nerd Fonts into `~/.local/share/fonts`.
+4. **Desktop only** (auto-detected, or `DESKTOP=1`/`0`): Ghostty from the
+   official repos where it exists (Arch, openSUSE; elsewhere a link to
+   ghostty.org's install docs) and JetBrains Mono + Symbols Nerd Fonts into
+   `~/.local/share/fonts`.
 5. **Same shared steps as macOS** (`lib/install-common.sh`): stow, login
    shell (`LOGIN_SHELL=fish|zsh|none`), fish plugins, herdr agent hooks, yazi
    plugins.
@@ -109,7 +110,7 @@ How it gets each tool:
 | Kind | Where from |
 |---|---|
 | Distro packages | the distro's own official repos (no PPAs, COPRs, AUR or snaps) |
-| GitHub releases | the project's own upstream repo, **sha256-verified** against the digest GitHub publishes for each asset (mismatch = abort): junegunn/fzf, jesseduffield/lazygit, eza-community/eza, dandavison/delta, sharkdp/vivid, ouch-org/ouch, sxyazi/yazi, cli/cli, ajeetdsouza/zoxide, linebender/resvg, neovim/neovim, ryanoasis/nerd-fonts |
+| GitHub releases | the project's own upstream repo, **sha256-verified** against the digest GitHub publishes for each asset (mismatch or no published digest = refused): junegunn/fzf, jesseduffield/lazygit, eza-community/eza, dandavison/delta, sharkdp/vivid, ouch-org/ouch, sxyazi/yazi, cli/cli, ajeetdsouza/zoxide, linebender/resvg, neovim/neovim, ryanoasis/nerd-fonts |
 | Official install scripts | starship.rs, fnm.vercel.app, herdr.dev, claude.ai, opencode.ai (HTTPS, each project's documented installer) |
 | Git clones | pyenv/pyenv, rbenv/rbenv, rbenv/ruby-build |
 | npm registry | @openai/codex, pnpm, yarn, markdownlint-cli2, neovim, tree-sitter-cli |
@@ -402,7 +403,7 @@ git history (gitleaks), `herdr config check`, stow into a fresh `$HOME`
 zsh/fish login shells actually load the env (`EDITOR`, `DO_NOT_TRACK`).
 
 The `linux-install` CI job runs `installLinux.sh` twice (a rerun must be safe)
-in Ubuntu 24.04, Fedora and Arch containers, then `.github/check-linux-install.sh`:
+in Ubuntu 24.04, Fedora, Arch and openSUSE Tumbleweed containers, then `.github/check-linux-install.sh`:
 every tool on PATH, nvim ≥ 0.11.2, `fzf --fish`, the npm toolchain, `herdr
 config check`, stow links, and fresh zsh/fish login shells loading the env.
 
