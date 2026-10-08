@@ -104,6 +104,19 @@ How it gets each tool:
    shell (`LOGIN_SHELL=fish|zsh|none`), fish plugins, herdr agent hooks, yazi
    plugins.
 
+**Sources — official and public only:**
+
+| Kind | Where from |
+|---|---|
+| Distro packages | the distro's own official repos (no PPAs, COPRs, AUR or snaps) |
+| GitHub releases | the project's own upstream repo, **sha256-verified** against the digest GitHub publishes for each asset (mismatch = abort): junegunn/fzf, jesseduffield/lazygit, eza-community/eza, dandavison/delta, sharkdp/vivid, ouch-org/ouch, sxyazi/yazi, cli/cli, ajeetdsouza/zoxide, linebender/resvg, neovim/neovim, ryanoasis/nerd-fonts |
+| Official install scripts | starship.rs, fnm.vercel.app, herdr.dev, claude.ai, opencode.ai (HTTPS, each project's documented installer) |
+| Git clones | pyenv/pyenv, rbenv/rbenv, rbenv/ruby-build |
+| npm registry | @openai/codex, pnpm, yarn, markdownlint-cli2, neovim, tree-sitter-cli |
+
+Ghostty is installed only where an official distro repo has it (Arch, openSUSE);
+elsewhere the script points to ghostty.org's install docs.
+
 Not on Linux: Conductor (macOS app), Homebrew. Debian/Ubuntu's `batcat` and
 `fdfind` are linked as `bat` and `fd`.
 

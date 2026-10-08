@@ -72,32 +72,50 @@ have() { command -v "$1" >/dev/null 2>&1; }
 version_ge() { [[ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | head -1)" == "$2" ]]; }
 link() { ln -sf "$1" "$BIN/$(basename "${2:-$1}")"; }
 
+# gh_fetch <owner/repo> <asset-regex> <dest-file>
+# Downloads the first matching asset of the repo's latest GitHub release and
+# verifies it against the sha256 GitHub publishes for that asset — a mismatch
+# aborts. Only official upstream repos are passed in (see README "Sources").
+# Uses GITHUB_TOKEN when set (CI rate limits).
+gh_fetch() {
+  local repo="$1" pattern="$2" dest="$3" auth=() meta url digest
+  [[ -n "${GITHUB_TOKEN:-}" ]] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
+  meta="$(curl -fsSL "${auth[@]}" "https://api.github.com/repos/$repo/releases/latest" \
+    | jq -c --arg re "$pattern" '[.assets[] | select(.name | test($re; "i"))][0] // empty')"
+  [[ -n "$meta" ]] || { echo "  no release asset of $repo matches $pattern" >&2; return 1; }
+  url="$(jq -r .browser_download_url <<<"$meta")"
+  digest="$(jq -r '.digest // empty' <<<"$meta")"
+  curl -fsSL "$url" -o "$dest"
+  if [[ "$digest" == sha256:* ]]; then
+    echo "${digest#sha256:}  $dest" | sha256sum -c --quiet - \
+      || { echo "  CHECKSUM MISMATCH for $url — not installing" >&2; rm -f "$dest"; return 1; }
+  else
+    echo "  warning: GitHub publishes no sha256 for $(basename "$url") — not verified" >&2
+  fi
+  basename "$url"
+}
+
 # gh_release <owner/repo> <asset-regex> <binary>...
-# Latest GitHub release → first asset matching the regex → extract → copy the
-# named binaries into ~/.local/bin. Uses GITHUB_TOKEN when set (CI rate limits).
+# gh_fetch + extract + copy the named binaries into ~/.local/bin.
 gh_release() {
   local repo="$1" pattern="$2"; shift 2
-  local auth=() url tmp
-  [[ -n "${GITHUB_TOKEN:-}" ]] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
-  url="$(curl -fsSL "${auth[@]}" "https://api.github.com/repos/$repo/releases/latest" \
-    | jq -r --arg re "$pattern" '[.assets[].browser_download_url | select(test($re; "i"))][0] // empty')"
-  [[ -n "$url" ]] || { echo "  no release asset of $repo matches $pattern" >&2; return 1; }
+  local tmp name b f
   tmp="$(mktemp -d)"
-  curl -fsSL "$url" -o "$tmp/asset"
-  case "$url" in
-    *.zip)              unzip -q "$tmp/asset" -d "$tmp/x" ;;
-    *.tar.gz|*.tgz)     mkdir -p "$tmp/x" && tar -xzf "$tmp/asset" -C "$tmp/x" ;;
-    *.tar.xz)           mkdir -p "$tmp/x" && tar -xJf "$tmp/asset" -C "$tmp/x" ;;
-    *)                  mkdir -p "$tmp/x" && cp "$tmp/asset" "$tmp/x/$1" ;;
+  name="$(gh_fetch "$repo" "$pattern" "$tmp/asset")" || { rm -rf "$tmp"; return 1; }
+  mkdir -p "$tmp/x"
+  case "$name" in
+    *.zip)          unzip -q "$tmp/asset" -d "$tmp/x" ;;
+    *.tar.gz|*.tgz) tar -xzf "$tmp/asset" -C "$tmp/x" ;;
+    *.tar.xz)       tar -xJf "$tmp/asset" -C "$tmp/x" ;;
+    *)              cp "$tmp/asset" "$tmp/x/$1" ;;
   esac
-  local b f
   for b in "$@"; do
     f="$(find "$tmp/x" -type f -name "$b" | head -1)"
-    [[ -n "$f" ]] || { echo "  $b not found in $url" >&2; rm -rf "$tmp"; return 1; }
+    [[ -n "$f" ]] || { echo "  $b not found in $name" >&2; rm -rf "$tmp"; return 1; }
     install -m 755 "$f" "$BIN/$b"
   done
   rm -rf "$tmp"
-  echo "  installed $* from $repo"
+  echo "  installed $* from $repo ($name)"
 }
 
 # ── 1. Base + native packages ─────────────────────────────────────────────────
@@ -132,8 +150,8 @@ nvim_ver="$(nvim --version 2>/dev/null | sed -n 's/^NVIM v\([0-9.]*\).*/\1/p')"
 if [[ -z "$nvim_ver" ]] || ! version_ge "$nvim_ver" 0.11.2; then
   nv_arch=$([[ $RARCH == x86_64 ]] && echo x86_64 || echo arm64)
   rm -rf "$OPT/nvim" && mkdir -p "$OPT/nvim"
-  curl -fsSL "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-${nv_arch}.tar.gz" \
-    | tar -xz -C "$OPT/nvim" --strip-components=1
+  gh_fetch neovim/neovim "^nvim-linux-${nv_arch}\\.tar\\.gz$" "$OPT/nvim.tar.gz" >/dev/null
+  tar -xzf "$OPT/nvim.tar.gz" -C "$OPT/nvim" --strip-components=1 && rm -f "$OPT/nvim.tar.gz"
   link "$OPT/nvim/bin/nvim"
   echo "  installed nvim $("$BIN/nvim" --version | head -1)"
 fi
@@ -185,19 +203,19 @@ fi
 if [[ "$DESKTOP" == 1 ]]; then
   step "Ghostty + Nerd Fonts"
   if ! have ghostty; then
+    # official distro repos only (Arch extra, openSUSE) — COPR/snap/PPA builds
+    # are third-party, so other distros get a pointer to Ghostty's own docs
     case $PM in
       pacman|zypper) pm_install ghostty ;;
-      dnf)    $SUDO dnf -y -q copr enable scottames/ghostty && pm_install ghostty ;;
-      apt)    if have snap; then $SUDO snap install ghostty --classic
-              else echo "  Ghostty: no apt package — see https://ghostty.org/docs/install/binary"; fi ;;
     esac
+    have ghostty || echo "  Ghostty: not in official $PM repos — install per https://ghostty.org/docs/install/binary"
   fi
   FONT_DIR="$HOME/.local/share/fonts/NerdFonts"
   if [[ ! -d "$FONT_DIR" ]]; then
     mkdir -p "$FONT_DIR"
     for font in JetBrainsMono NerdFontsSymbolsOnly; do
-      curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${font}.tar.xz" \
-        | tar -xJ -C "$FONT_DIR"
+      gh_fetch ryanoasis/nerd-fonts "^${font}\\.tar\\.xz$" "$FONT_DIR/$font.tar.xz" >/dev/null
+      tar -xJf "$FONT_DIR/$font.tar.xz" -C "$FONT_DIR" && rm -f "$FONT_DIR/$font.tar.xz"
     done
     fc-cache -f "$FONT_DIR" >/dev/null
   fi
