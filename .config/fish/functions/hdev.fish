@@ -96,8 +96,11 @@ end
 # unless some pane in the workspace already runs nvim. Never starts an agent.
 function _hdev_add_editor -a agent_pane root
     set -l ws (string split -f1 : $agent_pane)
-    for p in (_hdev_h pane list --workspace $ws | jq -r '.result.panes[].pane_id')
-        _hdev_h pane process-info --pane $p | jq -e '.result.process_info.foreground_processes[] | select(.argv0 == "nvim")' >/dev/null; and return
+    # capture before jq: a herdr failure must stop here, not read as "no nvim"
+    set -l panes (_hdev_h pane list --workspace $ws); or return 1
+    for p in (printf '%s\n' $panes | jq -r '.result.panes[].pane_id')
+        set -l info (_hdev_h pane process-info --pane $p); or return 1
+        printf '%s\n' $info | jq -e '.result.process_info.foreground_processes[] | select(.argv0 == "nvim")' >/dev/null; and return
     end
     # split leaves the agent in the left 70% slot; swap moves nvim into it
     set -l ed (_hdev_h pane split $agent_pane --direction right --ratio 0.7 --cwd $root --no-focus | jq -r .result.pane.pane_id)

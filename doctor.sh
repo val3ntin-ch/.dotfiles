@@ -46,7 +46,8 @@ if ((!CHECK_ONLY)); then
   fi
 
   # 3. re-link dotfiles (new/moved files after a pull)
-  stow_dotfiles >/dev/null && ok "dotfiles re-stowed"
+  if stow_dotfiles >/dev/null; then ok "dotfiles re-stowed"
+  else bad "stow failed (a real file blocks a link?)" "cd ~/.dotfiles && stow --target=\$HOME --restow . — read the conflict, move that file aside, rerun"; fi
 
   # 4. regenerate shell caches — rebuilt automatically on next shell start
   rm -f "$HOME/.cache/zsh/"zcompdump* "$HOME/.config/zsh/.zcompdump"* \
@@ -72,10 +73,12 @@ if ((!CHECK_ONLY)); then
 
   # 7. herdr: agent hooks + reload config into a running server
   if have herdr; then
-    herdr_integrations >/dev/null 2>&1 && ok "herdr agent hooks reinstalled"
+    if herdr_integrations >/dev/null 2>&1; then ok "herdr agent hooks reinstalled"
+    else bad "herdr agent hooks failed" "herdr integration install claude (then codex, opencode) to see the error"; fi
     # capture first: `herdr status | grep -q` + pipefail misreads SIGPIPE as "not running"
     if [[ "$(herdr status 2>/dev/null)" == *"status: running"* ]]; then
-      herdr server reload-config >/dev/null 2>&1 && ok "herdr config reloaded into running server"
+      if herdr server reload-config >/dev/null 2>&1; then ok "herdr config reloaded into running server"
+      else bad "herdr config reload failed" "herdr server reload-config"; fi
     fi
   fi
 fi
@@ -121,7 +124,10 @@ for sh in fish zsh; do
 done
 have fish && { env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=dumb "$(command -v fish)" -c 'functions -q hdev' \
   && ok "hdev available in fish" || bad "hdev missing in fish" "re-stow: ./doctor.sh, then exec fish"; }
-have zsh && { env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=dumb "$(command -v zsh)" -ic 'whence -w hdev' >/dev/null 2>&1 \
+# source only the functions file (definitions only) — an interactive zsh would
+# run the whole .zshrc, which writes caches and may clone plugins (not read-only)
+have zsh && { env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=dumb "$(command -v zsh)" -c \
+  'source "$HOME/.config/zsh/conf.d/functions.zsh" && whence -w hdev' >/dev/null 2>&1 \
   && ok "hdev available in zsh" || bad "hdev missing in zsh" "re-stow: ./doctor.sh, then exec zsh"; }
 
 # current shell may be stale: the loaded hdev must match the repo's

@@ -301,10 +301,12 @@ _hdev_h() {
 # left of that agent (70/30) unless a pane in the workspace already runs nvim.
 # Never starts an agent.
 _hdev_add_editor() {
-  local agent_pane="$1" root="$2" p ed
-  for p in $(_hdev_h pane list --workspace "${agent_pane%%:*}" | jq -r '.result.panes[].pane_id'); do
-    _hdev_h pane process-info --pane "$p" \
-      | jq -e '.result.process_info.foreground_processes[] | select(.argv0 == "nvim")' >/dev/null && return
+  local agent_pane="$1" root="$2" p ed panes info
+  # capture before jq: a herdr failure must stop here, not read as "no nvim"
+  panes="$(_hdev_h pane list --workspace "${agent_pane%%:*}")" || return 1
+  for p in $(jq -r '.result.panes[].pane_id' <<<"$panes"); do
+    info="$(_hdev_h pane process-info --pane "$p")" || return 1
+    jq -e '.result.process_info.foreground_processes[] | select(.argv0 == "nvim")' >/dev/null <<<"$info" && return
   done
   # split leaves the agent in the left 70% slot; swap moves nvim into it
   ed="$(_hdev_h pane split "$agent_pane" --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
