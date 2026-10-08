@@ -1,7 +1,11 @@
-function hdev -d "Herdr dev workspace: nvim 70% + agent 30%"
-    # Usage: hdev [-a claude|codex|opencode] [project-dir | zoxide-query]
+function hdev -d "Herdr workspace for a project: agent (+ nvim with -e)"
+    # Usage: hdev [-e] [-n] [-a claude|codex|opencode] [project-dir | zoxide-query]
+    #   -e  also open nvim (left 70%, agent right 30%)
+    #   -n  always open a new workspace, even if the project already has one
+    # Without -n, an agent already running in the project is focused instead
+    # of starting a duplicate.
     # Mirrors zsh version: .config/zsh/conf.d/functions.zsh
-    argparse 'a/agent=' -- $argv; or return
+    argparse 'a/agent=' e/editor n/new -- $argv; or return
     set -l agent claude
     set -q _flag_agent; and set agent $_flag_agent
 
@@ -25,24 +29,35 @@ function hdev -d "Herdr dev workspace: nvim 70% + agent 30%"
         return 1
     end
 
-    # reuse an existing workspace for this project instead of opening a twin
-    set -l ws (herdr workspace list | jq -r --arg l $name '.result.workspaces[] | select(.label == $l) | .workspace_id' | head -1)
-    if test -n "$ws"; and test "$ws" != "$HERDR_WORKSPACE_ID"
+    if not set -q _flag_new
+        # same agent already running in this project → just go there
+        set -l running (herdr agent list | jq -r --arg r $root --arg a $agent '.result.agents[] | select(.cwd == $r and .agent == $a) | .pane_id' | head -1)
+        if test -n "$running"
+            herdr agent focus $running >/dev/null
+            return
+        end
+    end
+
+    set -l main
+    set -l ws
+    set -q _flag_new; or set ws (herdr workspace list | jq -r --arg l $name '.result.workspaces[] | select(.label == $l) | .workspace_id' | head -1)
+    if test -n "$ws"; and test "$ws" = "$HERDR_WORKSPACE_ID"
+        # already in the project's workspace: add the agent beside this pane
+        set main (herdr pane split --current --direction right --ratio 0.5 --cwd $root --no-focus | jq -r .result.pane.pane_id)
+    else if test -n "$ws"
         herdr workspace focus $ws >/dev/null
-        return
+        set -l first (herdr pane list --workspace $ws | jq -r '.result.panes[0].pane_id')
+        set main (herdr pane split $first --direction right --ratio 0.5 --cwd $root --focus | jq -r .result.pane.pane_id)
+    else
+        set main (herdr workspace create --cwd $root --label $name --focus | jq -r .result.root_pane.pane_id)
     end
 
-    # already in this project's workspace: build the layout right here
-    if test -n "$ws"
-        set -l side (herdr pane split --current --direction right --ratio 0.7 --cwd $root --no-focus | jq -r .result.pane.pane_id)
+    if set -q _flag_editor
+        # --ratio is the share kept by the original (left) pane
+        set -l side (herdr pane split $main --direction right --ratio 0.7 --cwd $root --no-focus | jq -r .result.pane.pane_id)
+        herdr pane run $main 'nvim .' >/dev/null
         herdr pane run $side $agent >/dev/null
-        cd $root; and nvim .
-        return
+    else
+        herdr pane run $main $agent >/dev/null
     end
-
-    set -l editor (herdr workspace create --cwd $root --label $name --focus | jq -r .result.root_pane.pane_id)
-    # --ratio is the share kept by the original (left) pane
-    set -l side (herdr pane split $editor --direction right --ratio 0.7 --cwd $root --no-focus | jq -r .result.pane.pane_id)
-    herdr pane run $editor 'nvim .' >/dev/null
-    herdr pane run $side $agent >/dev/null
 end

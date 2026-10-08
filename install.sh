@@ -174,4 +174,4 @@ printf '    5. Log in once: gh auth login · claude · codex · opencode auth lo
 printf '    6. Agent plugins/skills + agent configs (telemetry off) — run one of:\n'
 printf '         ./installAi.sh        (web-only skillset)\n'
 printf '         ./installAiMobile.sh  (web + React Native skillset)\n'
-printf '    7. herdr                 → then `hdev <project>` for nvim + agent layout\n\n'
+printf '    7. herdr                 → then `hdev <project>` (agent; add -e for nvim)\n\n'

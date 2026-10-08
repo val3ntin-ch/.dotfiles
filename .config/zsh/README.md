@@ -674,7 +674,7 @@ All functions live in `conf.d/functions.zsh` and `conf.d/git.zsh`.
 
 | Function | Usage | What it does |
 |---|---|---|
-| `hdev` | `hdev`, `hdev myproject`, `hdev -a codex ./path` | Herdr workspace: nvim left 70% + agent right 30% (default `claude`). Switches to an open workspace with the same name; if already in it, builds the layout in place |
+| `hdev` | `hdev`, `hdev myproject`, `hdev -e -a codex ./path`, `hdev -n` | Open an agent for a project (default `claude`); focuses it if already running. `-e` adds nvim (70/30), `-n` forces a new workspace |
 
 ### Nvim / plugin updates
 

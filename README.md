@@ -267,7 +267,7 @@ Prefix is `Ctrl+t` (same as the old tmux setup).
 
 | Keys | Action |
 |---|---|
-| `hdev [-a codex\|opencode] [dir\|zoxide-query]` | Workspace for a project: nvim 70% + agent 30% (default agent: claude). Switches to an open workspace with the same name; if you're already in it, builds the layout in place |
+| `hdev [-e] [-n] [-a codex\|opencode] [dir\|zoxide-query]` | Open an agent for a project (default: claude). If that agent already runs there, focus it instead of starting another. `-e` adds nvim (70%, agent 30%), `-n` forces a new workspace |
 | `Ctrl+h/j/k/l` in nvim | Move between nvim splits, then into the neighbouring herdr pane |
 | `prefix h/j/k/l` | Move between herdr panes (from a shell/agent pane) |
 | `prefix g` / `prefix v` | Split side by side / stacked |
@@ -277,6 +277,13 @@ Prefix is `Ctrl+t` (same as the old tmux setup).
 | `prefix f` | Go to (was `prefix g` in herdr defaults) |
 | `prefix r` | Reload config |
 | `prefix ?` | All keys |
+
+**Sessions persist.** Herdr keeps a background server; closing Ghostty or
+detaching (`prefix q`) leaves everything running, and `herdr` reattaches. After
+a reboot or server restart herdr restores every workspace, tab and pane and
+resumes each agent into its conversation (`[session] resume_agents_on_restore`).
+An agent that never got a message has nothing to resume — start a new one in
+that pane. Run `hdev` again any time: it focuses what's already running.
 
 Agents running in herdr can drive it too: `herdr --skill` prints the skill
 file that teaches an agent to open panes and start other agents.
@@ -323,8 +330,13 @@ git switch -c my-change
 # edit, then run the same checks CI runs:
 .github/check.sh
 git commit -am "..." && git push -u origin my-change
-gh pr create --fill
+gh pr create            # body pre-filled from .github/pull_request_template.md
+gh pr merge --squash    # once CI is green; GitHub deletes the remote branch
+git switch main && git pull && git branch -d my-change
 ```
+
+Every PR uses the same template: What · Why · Changes · How it was tested ·
+After merging.
 
 `.github/check.sh` checks: bash/zsh/fish/lua syntax, shellcheck, TOML/JSON
 parsing, hardcoded `/Users/<name>` paths, secrets (gitleaks), `herdr config
