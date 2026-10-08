@@ -283,15 +283,40 @@ fal() {
 # HERDR FUNCTIONS
 # ══════════════════════════════════════════════════════════════════════════════
 
-# hdev — herdr dev workspace for a project: nvim left 70% + agent right 30%
-# Reuses the workspace if one with the project's name is already open.
-# Mirrors fish version: .config/fish/functions/hdev.fish
+# _hdev_add_editor — `hdev -e` on a project whose agent already runs: add nvim
+# left of that agent (70/30) unless a pane in the workspace already runs nvim.
+# Never starts an agent.
+_hdev_add_editor() {
+  local agent_pane="$1" root="$2" p ed
+  for p in $(herdr pane list --workspace "${agent_pane%%:*}" | jq -r '.result.panes[].pane_id'); do
+    herdr pane process-info --pane "$p" \
+      | jq -e '.result.process_info.foreground_processes[] | select(.argv0 == "nvim")' >/dev/null && return
+  done
+  # split leaves the agent in the left 70% slot; swap moves nvim into it
+  ed="$(herdr pane split "$agent_pane" --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
+  herdr pane swap --source-pane "$agent_pane" --target-pane "$ed" >/dev/null
+  herdr pane run "$ed" 'nvim .' >/dev/null
+}
+
+# hdev — herdr workspace for a project: agent, plus nvim with -e
+# Without -n, an agent already running in the project is focused instead of
+# starting a duplicate. Mirrors fish version: .config/fish/functions/hdev.fish
 #
-# Usage: hdev (uses cwd), hdev myproject (resolves via zoxide), hdev ./path,
-#        hdev -a codex ./path  (agent: claude [default] | codex | opencode)
+# Usage: hdev [-e] [-n] [-a claude|codex|opencode] [dir | zoxide-query]
+#   -e  also open nvim (left 70%, agent right 30%)
+#   -n  always open a new workspace, even if the project already has one
 hdev() {
-  local agent=claude root="$PWD" name ws editor side
-  if [[ "$1" == "-a" ]]; then agent="$2"; shift 2; fi
+  local agent=claude editor=0 new=0 root="$PWD" name ws running main first side opt
+  local OPTIND=1
+  while getopts "a:en" opt; do
+    case $opt in
+      a) agent="$OPTARG" ;;
+      e) editor=1 ;;
+      n) new=1 ;;
+      *) return 1 ;;
+    esac
+  done
+  shift $((OPTIND - 1))
 
   if [[ $# -ge 1 ]]; then
     if [[ -d "$1" ]]; then
@@ -306,25 +331,36 @@ hdev() {
 
   [[ "$HERDR_ENV" == 1 ]] || { echo "hdev: run inside herdr (start it with: herdr)" >&2; return 1; }
 
-  ws="$(herdr workspace list | jq -r --arg l "$name" '.result.workspaces[] | select(.label == $l) | .workspace_id' | head -1)"
-  if [[ -n "$ws" && "$ws" != "$HERDR_WORKSPACE_ID" ]]; then
+  if (( ! new )); then
+    # same agent already running in this project → just go there
+    running="$(herdr agent list | jq -r --arg r "$root" --arg a "$agent" '.result.agents[] | select(.cwd == $r and .agent == $a) | .pane_id' | head -1)"
+    if [[ -n "$running" ]]; then
+      herdr agent focus "$running" >/dev/null
+      (( editor )) && _hdev_add_editor "$running" "$root"
+      return
+    fi
+    ws="$(herdr workspace list | jq -r --arg l "$name" '.result.workspaces[] | select(.label == $l) | .workspace_id' | head -1)"
+  fi
+
+  if [[ -n "$ws" && "$ws" == "$HERDR_WORKSPACE_ID" ]]; then
+    # already in the project's workspace: add the agent beside this pane
+    main="$(herdr pane split --current --direction right --ratio 0.5 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
+  elif [[ -n "$ws" ]]; then
     herdr workspace focus "$ws" >/dev/null
-    return
+    first="$(herdr pane list --workspace "$ws" | jq -r '.result.panes[0].pane_id')"
+    main="$(herdr pane split "$first" --direction right --ratio 0.5 --cwd "$root" --focus | jq -r .result.pane.pane_id)"
+  else
+    main="$(herdr workspace create --cwd "$root" --label "$name" --focus | jq -r .result.root_pane.pane_id)"
   fi
 
-  # already in this project's workspace: build the layout right here
-  if [[ -n "$ws" ]]; then
-    side="$(herdr pane split --current --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
+  if (( editor )); then
+    # --ratio is the share kept by the original (left) pane
+    side="$(herdr pane split "$main" --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
+    herdr pane run "$main" 'nvim .' >/dev/null
     herdr pane run "$side" "$agent" >/dev/null
-    cd "$root" && nvim .
-    return
+  else
+    herdr pane run "$main" "$agent" >/dev/null
   fi
-
-  editor="$(herdr workspace create --cwd "$root" --label "$name" --focus | jq -r .result.root_pane.pane_id)"
-  # --ratio is the share kept by the original (left) pane
-  side="$(herdr pane split "$editor" --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
-  herdr pane run "$editor" 'nvim .' >/dev/null
-  herdr pane run "$side" "$agent" >/dev/null
 }
 
 # ══════════════════════════════════════════════════════════════════════════════
