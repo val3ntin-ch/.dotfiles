@@ -140,6 +140,11 @@ case $PM in
                 vivid neovim ffmpeg poppler-tools ImageMagick 7zip python3 xclip wl-clipboard) ;;
 esac
 pm_install "${BASE[@]}"
+# openSUSE minimal/container images ship busybox-gawk, which blocks real gawk
+# (fish needs awk). Swap only that stub; never force-resolve anything else.
+if [[ $PM == zypper ]] && rpm -q busybox-gawk >/dev/null 2>&1; then
+  $SUDO zypper -n -q install --force-resolution gawk >/dev/null
+fi
 pm_install "${PKGS[@]}"
 # Debian/Ubuntu ship bat as `batcat` and fd as `fdfind`
 have bat || { have batcat && link "$(command -v batcat)" bat; }
