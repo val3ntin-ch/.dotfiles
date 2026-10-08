@@ -487,12 +487,12 @@ Rename a branch locally and on origin. Updates the remote tracking ref.
 
 ### Herdr Functions
 
-#### `hdev [-e] [-n] [-a agent] [dir | zoxide-query]`
-Open an agent for a project (default `claude`; `-a codex` / `-a opencode`).
-If that agent already runs in the project, focuses it instead of starting a
-duplicate. Otherwise adds it to the project's workspace (or creates one).
-`-e` also opens `nvim .` (left 70%, agent right 30%); `-n` always creates a new
-workspace. With no argument inside a git repo, the project is the repo root.
+#### `hdev [-o] [-n] [-a agent] [dir | zoxide-query]`
+Open nvim (left 70%) and an agent (right 30%; default `claude`, or `-a codex` /
+`-a opencode`) for a project. What already runs is focused, not duplicated;
+missing pieces go into idle shell panes of the project's workspace, splitting a
+new pane only when none is idle (or the workspace is created). `-o` opens the
+agent only; `-n` always creates a new workspace (`-e` still works = default). Prints what it did each time. With no argument inside a git repo, the project is the repo root.
 Must run inside herdr; any herdr error is printed (then run `~/.dotfiles/doctor.sh`).
 
 ---

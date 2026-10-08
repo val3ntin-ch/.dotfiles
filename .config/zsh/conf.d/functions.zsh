@@ -297,13 +297,30 @@ _hdev_h() {
   printf '%s\n' "$out"
 }
 
-# _hdev_add_editor — `hdev -e` on a project whose agent already runs: add nvim
-# left of that agent (70/30) unless a pane in the workspace already runs nvim.
-# Never starts an agent.
+# _hdev_idle_pane <workspace> <exclude-pane> — print the first pane whose
+# foreground is only a shell (nothing running in it); prints nothing if none.
+# Returns 1 only on a herdr error.
+_hdev_idle_pane() {
+  local ws="$1" exclude="$2" panes p info
+  panes="$(_hdev_h pane list --workspace "$ws")" || return 1
+  for p in $(jq -r '.result.panes[].pane_id' <<<"$panes"); do
+    [[ "$p" == "$exclude" ]] && continue
+    info="$(_hdev_h pane process-info --pane "$p")" || return 1
+    if jq -e '[.result.process_info.foreground_processes[].argv0 | ltrimstr("-")] | length > 0 and all(test("^(zsh|fish|bash|sh)$"))' >/dev/null <<<"$info"; then
+      echo "$p"
+      return 0
+    fi
+  done
+}
+
+# _hdev_add_editor — `hdev` on a project whose agent already runs: open nvim
+# in an idle shell pane of that workspace, else split it off the agent (nvim
+# left 70%). Only says so when nvim is already open. Never starts an agent.
 _hdev_add_editor() {
-  local agent_pane="$1" root="$2" p ed panes info
+  local agent_pane="$1" root="$2" ws p ed panes info go
+  ws="${agent_pane%%:*}"
   # capture before jq: a herdr failure must stop here, not read as "no nvim"
-  panes="$(_hdev_h pane list --workspace "${agent_pane%%:*}")" || return 1
+  panes="$(_hdev_h pane list --workspace "$ws")" || return 1
   for p in $(jq -r '.result.panes[].pane_id' <<<"$panes"); do
     info="$(_hdev_h pane process-info --pane "$p")" || return 1
     if jq -e '.result.process_info.foreground_processes[] | select(.argv0 == "nvim")' >/dev/null <<<"$info"; then
@@ -311,30 +328,41 @@ _hdev_add_editor() {
       return
     fi
   done
+  go="cd ${(q)root} && nvim ."
+  ed="$(_hdev_idle_pane "$ws" "$HERDR_PANE_ID")" || return 1
+  if [[ -n "$ed" ]]; then
+    _hdev_h pane run "$ed" "$go" >/dev/null || return 1
+    echo "hdev: nvim opened in idle pane $ed"
+    return
+  fi
   # split leaves the agent in the left 70% slot; swap moves nvim into it
   ed="$(_hdev_h pane split "$agent_pane" --direction right --ratio 0.7 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
   [[ -n "$ed" ]] || return 1
   _hdev_h pane swap --source-pane "$agent_pane" --target-pane "$ed" >/dev/null || return 1
-  _hdev_h pane run "$ed" "cd ${(q)root} && nvim ." >/dev/null
+  _hdev_h pane run "$ed" "$go" >/dev/null || return 1
+  echo "hdev: nvim opened in new pane $ed"
 }
 
-# hdev — herdr workspace for a project: agent, plus nvim with -e
-# Without -n, an agent already running in the project is focused instead of
-# starting a duplicate. With no argument inside a git repo, the project is the
-# repo root (not the subfolder you're in). Every herdr error is printed — run
-# ~/.dotfiles/doctor.sh if one appears.
+# hdev — herdr workspace for a project: nvim + agent (-o: agent only)
+# Reuses what exists: an agent already running in the project is focused (not
+# duplicated), and idle shell panes in the project's workspace (e.g. left over
+# after a herdr restart) are reused before any new split. With no argument
+# inside a git repo, the project is the repo root. Always prints what it did;
+# herdr errors are shown — then run ~/.dotfiles/doctor.sh.
 # Mirrors fish version: .config/fish/functions/hdev.fish
 #
-# Usage: hdev [-e] [-n] [-a claude|codex|opencode] [dir | zoxide-query]
-#   -e  also open nvim (left 70%, agent right 30%)
+# Usage: hdev [-o] [-n] [-a claude|codex|opencode] [dir | zoxide-query]
+#   default: nvim (left 70%) + agent (right 30%)
+#   -o  agent only, no nvim  (-e is accepted and means the default)
 #   -n  always open a new workspace, even if the project already has one
 hdev() {
-  local agent=claude editor=0 new=0 root name ws running main first side opt json
+  local agent=claude editor=1 new=0 root name ws running main anchor side opt json
   local OPTIND=1
-  while getopts "a:en" opt; do
+  while getopts "a:eon" opt; do
     case $opt in
       a) agent="$OPTARG" ;;
       e) editor=1 ;;
+      o) editor=0 ;;
       n) new=1 ;;
       *) return 1 ;;
     esac
@@ -355,8 +383,8 @@ hdev() {
   # zsh's :A modifier, not realpath(1) — macOS only ships that since 13.
   root="${root:A}"
   name="${root:t}"
-  # explicit cd: nvim/agent must open the repo even if the new pane's shell
-  # starts somewhere else (rc files, herdr cwd fallback to $HOME)
+  # explicit cd: nvim/agent must open the repo even if the pane's shell sits
+  # elsewhere (reused pane, rc files, herdr cwd fallback to $HOME)
   local go="cd ${(q)root} &&"
 
   [[ "$HERDR_ENV" == 1 ]] || { echo "hdev: run inside herdr (start it with: herdr)" >&2; return 1; }
@@ -368,6 +396,7 @@ hdev() {
     running="$(jq -r --arg r "$root" --arg a "$agent" '.result.agents[] | select(.cwd == $r and .agent == $a) | .pane_id' <<<"$json" | head -1)"
     if [[ -n "$running" ]]; then
       _hdev_h agent focus "$running" >/dev/null || return 1
+      echo "hdev: $agent already running in $name (pane $running) — focused"
       (( editor )) && _hdev_add_editor "$running" "$root"
       return
     fi
@@ -375,17 +404,28 @@ hdev() {
     ws="$(jq -r --arg l "$name" '.result.workspaces[] | select(.label == $l) | .workspace_id' <<<"$json" | head -1)"
   fi
 
-  if [[ -n "$ws" && "$ws" == "$HERDR_WORKSPACE_ID" ]]; then
-    # already in the project's workspace: add the agent beside this pane
-    main="$(_hdev_h pane split --current --direction right --ratio 0.5 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
-  elif [[ -n "$ws" ]]; then
-    _hdev_h workspace focus "$ws" >/dev/null || return 1
-    first="$(_hdev_h pane list --workspace "$ws" | jq -r '.result.panes[0].pane_id')"
-    main="$(_hdev_h pane split "$first" --direction right --ratio 0.5 --cwd "$root" --focus | jq -r .result.pane.pane_id)"
+  if [[ -n "$ws" ]]; then
+    if [[ "$ws" != "$HERDR_WORKSPACE_ID" ]]; then
+      _hdev_h workspace focus "$ws" >/dev/null || return 1
+    fi
+    # an idle shell pane (not the one running hdev) before a new split
+    main="$(_hdev_idle_pane "$ws" "$HERDR_PANE_ID")" || return 1
+    if [[ -n "$main" ]]; then
+      echo "hdev: starting $agent in idle pane $main"
+    else
+      anchor="$HERDR_PANE_ID"
+      if [[ "$ws" != "$HERDR_WORKSPACE_ID" ]]; then
+        anchor="$(_hdev_h pane list --workspace "$ws" | jq -r '.result.panes[0].pane_id')"
+      fi
+      main="$(_hdev_h pane split "$anchor" --direction right --ratio 0.5 --cwd "$root" --no-focus | jq -r .result.pane.pane_id)"
+      [[ -n "$main" ]] || return 1
+      echo "hdev: starting $agent in new pane $main"
+    fi
   else
     main="$(_hdev_h workspace create --cwd "$root" --label "$name" --focus | jq -r .result.root_pane.pane_id)"
+    [[ -n "$main" ]] || return 1
+    echo "hdev: new workspace $name"
   fi
-  [[ -n "$main" ]] || return 1
 
   if (( editor )); then
     # --ratio is the share kept by the original (left) pane
