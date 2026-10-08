@@ -18,6 +18,8 @@ CHANGELOG
 # ── Bootstrap scripts (run from repo, not stowed to $HOME) ───────────────────
 install\.sh
 installAi.*\.sh
+installLinux\.sh
+^/lib
 
 # ── Agent base configs (merged into place by installAi.sh, not stowed) ───────
 ^/agents

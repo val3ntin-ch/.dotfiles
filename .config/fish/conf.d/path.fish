@@ -27,9 +27,10 @@ if test -d /Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
     set -gx JAVA_HOME /Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
 end
 
-# Android SDK (React Native)
-if test -d $HOME/Library/Android/sdk
+# Android SDK (React Native) — macOS default, else Android Studio's Linux default
+if test -d $HOME/Library/Android/sdk; or test -d $HOME/Android/Sdk
     set -gx ANDROID_HOME $HOME/Library/Android/sdk
+    test -d $ANDROID_HOME; or set -gx ANDROID_HOME $HOME/Android/Sdk
     fish_add_path -g $ANDROID_HOME/emulator
     fish_add_path -g $ANDROID_HOME/platform-tools
 end

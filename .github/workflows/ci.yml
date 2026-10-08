@@ -36,3 +36,29 @@ jobs:
       - name: Run checks
         run: .github/check.sh
 
+
+  linux-install:
+    # installLinux.sh end to end on each distro family, twice (rerun must be safe)
+    name: linux-install (${{ matrix.distro }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: ["ubuntu:24.04", "fedora:latest", "archlinux:latest"]
+    container: ${{ matrix.distro }}
+    env:
+      LOGIN_SHELL: none
+      DESKTOP: "0"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install (first run)
+        run: bash ./installLinux.sh
+
+      - name: Install (rerun)
+        run: bash ./installLinux.sh
+
+      - name: Verify
+        run: bash .github/check-linux-install.sh
