@@ -309,3 +309,23 @@ fish -c 'fisher update'              # drops tmux.fish
 nvim --headless "+Lazy! clean" +qa   # drops vim-tmux-navigator
 ```
 
+---
+
+## Contributing / CI
+
+`main` is protected: every change goes through a pull request, and the `CI`
+workflow (`.github/workflows/ci.yml`) must pass before merging.
+
+```bash
+git switch -c my-change
+# edit, then run the same checks CI runs:
+.github/check.sh
+git commit -am "..." && git push -u origin my-change
+gh pr create --fill
+```
+
+`.github/check.sh` checks: bash/zsh/fish/lua syntax, shellcheck, TOML/JSON
+parsing, hardcoded `/Users/<name>` paths, secrets (gitleaks), `herdr config
+check`, stow into a fresh `$HOME` (nothing repo-only leaks), and that fresh
+zsh/fish login shells actually load the env (`EDITOR`, `DO_NOT_TRACK`).
+

@@ -21,3 +21,6 @@ installAi.*\.sh
 
 # ── Agent base configs (merged into place by installAi.sh, not stowed) ───────
 ^/agents
+
+# ── CI (GitHub only, not stowed) ─────────────────────────────────────────────
+^/\.github
