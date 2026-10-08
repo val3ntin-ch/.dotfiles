@@ -5,7 +5,7 @@
 # Native packages first; anything the distro lacks or ships too old comes from
 # the tool's official installer or GitHub release, into ~/.local/bin.
 # Safe to rerun. Env overrides:
-#   LOGIN_SHELL=fish|zsh|none   default fish (none = don't chsh, e.g. containers)
+#   LOGIN_SHELL=zsh|fish|none   default zsh (none = don't chsh, e.g. containers)
 #   DESKTOP=auto|1|0            Ghostty + Nerd Fonts; auto = only with a GUI session
 set -euo pipefail
 
@@ -227,7 +227,7 @@ fi
 
 # ── 5-10. Shared steps (lib/install-common.sh) ────────────────────────────────
 stow_dotfiles
-LOGIN_SHELL="${LOGIN_SHELL:-fish}"
+LOGIN_SHELL="${LOGIN_SHELL:-zsh}"
 set_login_shell "$LOGIN_SHELL"
 fish_plugins
 # Node first: codex, pnpm, yarn and markdownlint come from npm on Linux

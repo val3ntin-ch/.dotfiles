@@ -136,7 +136,9 @@ note "already-open shells keep old functions — run: exec \$SHELL (or open a ne
 # login shell
 if [[ "$OS" == Darwin ]]; then login="$(dscl . -read "$HOME" UserShell | awk '{print $2}')"
 else login="$(getent passwd "${USER:-$(id -un)}" | cut -d: -f7)"; fi
-ok "login shell: $login"
+want="$([[ $OS == Darwin ]] && echo "$(brew --prefix 2>/dev/null)/bin/zsh" || command -v zsh)"
+if [[ "$login" == "$want" ]]; then ok "login shell: $login"
+else bad "login shell is $login, not zsh (the default)" "chsh -s $want  (asks your password), then open a new terminal"; fi
 
 # git identity + GitHub auth
 git config --get user.email >/dev/null && ok "git identity set" \

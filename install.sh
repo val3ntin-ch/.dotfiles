@@ -94,9 +94,9 @@ brew install --cask ghostty font-jetbrains-mono-nerd-font font-symbols-only-nerd
 # ── 6. Stow dotfiles ──────────────────────────────────────────────────────────
 stow_dotfiles
 
-# ── 7. Default shell → fish ───────────────────────────────────────────────────
-# zsh stays installed and configured; switch back with LOGIN_SHELL=zsh ./install.sh
-LOGIN_SHELL="${LOGIN_SHELL:-fish}"
+# ── 7. Default shell → zsh ────────────────────────────────────────────────────
+# fish stays installed and configured; use it as login shell with LOGIN_SHELL=fish ./install.sh
+LOGIN_SHELL="${LOGIN_SHELL:-zsh}"
 # brew's copy, not /bin/zsh — macOS ships an older zsh earlier on some PATHs
 set_login_shell "$LOGIN_SHELL" "$(brew --prefix)/bin/$LOGIN_SHELL"
 

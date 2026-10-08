@@ -93,7 +93,7 @@ yazi_plugins() {
 }
 
 next_steps() {
-  printf '\n\033[1;32m✓ Done. Open a new terminal — %s is your default shell.\033[0m\n' "${LOGIN_SHELL:-fish}"
+  printf '\n\033[1;32m✓ Done. Open a new terminal — %s is your default shell.\033[0m\n' "${LOGIN_SHELL:-zsh}"
   printf '  Next steps:\n'
   printf '    1. Set git identity (once per machine):\n'
   printf '       cat > ~/.config/git/config.local <<EOF\n'

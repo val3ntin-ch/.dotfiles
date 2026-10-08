@@ -22,11 +22,11 @@ Personal terminal setup for macOS and Linux — one script from zero to fully co
 # 1. clone the repo into ~/.dotfiles
 git clone https://github.com/val3ntin-ch/.dotfiles ~/.dotfiles
 
-# 2. run the bootstrap — installs all tools, stows dotfiles, sets fish as default shell
+# 2. run the bootstrap — installs all tools, stows dotfiles, sets zsh as default shell
 ~/.dotfiles/install.sh
 ```
 
-Open a new terminal when done. Fish is the default shell; zsh is fully configured too.
+Open a new terminal when done. Zsh is the default shell; fish is fully configured too.
 
 > **Machine-specific config** (API keys, SDK paths, local tools) goes in
 > `~/.config/fish/config-local.fish` (fish) or `~/.config/zsh/.zshrc.local`
@@ -45,7 +45,7 @@ Open a new terminal when done. Fish is the default shell; zsh is fully configure
 | 4 | Install herdr, Claude Code, Codex, OpenCode, Conductor; remove stale non-brew copies in `~/.local/bin` |
 | 5 | Install Ghostty + Nerd Fonts via `brew install --cask` |
 | 6 | Stow dotfiles to `$HOME` via GNU Stow + create runtime dirs. Pre-existing real files that would conflict (e.g. app-created `~/.config/git/ignore`) are backed up as `*.bak` automatically |
-| 7 | Set fish as default shell via `chsh` (`LOGIN_SHELL=zsh ./install.sh` for zsh; skipped if already set) |
+| 7 | Set zsh as default shell via `chsh` (`LOGIN_SHELL=fish ./install.sh` for fish; skipped if already set) |
 | 8 | Install fish plugins via Fisher |
 | 9 | Install herdr agent-state hooks for claude, codex, opencode |
 | 10 | Install Node LTS via fnm + global npm packages (neovim, tree-sitter-cli) |
@@ -101,7 +101,7 @@ How it gets each tool:
    ghostty.org's install docs) and JetBrains Mono + Symbols Nerd Fonts into
    `~/.local/share/fonts`.
 5. **Same shared steps as macOS** (`lib/install-common.sh`): stow, login
-   shell (`LOGIN_SHELL=fish|zsh|none`), fish plugins, herdr agent hooks, yazi
+   shell (`LOGIN_SHELL=zsh|fish|none`, default zsh), fish plugins, herdr agent hooks, yazi
    plugins.
 
 **Sources — official and public only:**
@@ -156,8 +156,8 @@ Not on Linux: Conductor (macOS app), Homebrew. Debian/Ubuntu's `batcat` and
 | Tool | Purpose |
 |---|---|
 | [Ghostty](https://ghostty.org) | Terminal emulator |
-| [fish](https://fishshell.com) | Default login shell |
-| [zsh](https://zsh.sourceforge.io) | Fully configured alternative (`LOGIN_SHELL=zsh ./install.sh`) |
+| [zsh](https://zsh.sourceforge.io) | Default login shell |
+| [fish](https://fishshell.com) | Fully configured alternative (`LOGIN_SHELL=fish ./install.sh`) |
 | [starship](https://starship.rs) | Prompt — shared by fish and zsh |
 
 ### Core CLI
@@ -282,7 +282,7 @@ so the herdr sidebar shows whether an agent is working, waiting or done.
 
 ```bash
 cd ~/.dotfiles && git pull
-exec fish         # or: exec zsh — restart shell to pick up changes
+exec zsh          # or: exec fish — restart shell to pick up changes
 ```
 
 Configs are symlinks, so `git pull` updates them in place — no re-stow needed
