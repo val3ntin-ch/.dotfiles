@@ -71,7 +71,9 @@ why each file exists.
 ```
 Every shell (scripts, SSH, cron, interactive):
   1. ~/.zshenv              → sets ZDOTDIR, then sources $ZDOTDIR/.zshenv
-  2. $ZDOTDIR/.zshenv       → PATH, env vars, exports (sourced by step 1)
+                              (skipped if ZDOTDIR is already exported — then
+                              zsh reads $ZDOTDIR/.zshenv itself)
+  2. $ZDOTDIR/.zshenv       → PATH, env vars, exports
 
 Login shells only (first terminal open, SSH session):
   3. $ZDOTDIR/.zprofile     → brew shellenv, fnm, version managers
@@ -88,9 +90,12 @@ New herdr panes are login shells too on macOS (herdr `shell_mode = "auto"`), so
 After that, ZSH looks for `.zprofile`/`.zshrc` inside `$ZDOTDIR` instead of `~/`.
 This keeps `~/` clean — only `~/.zshenv` sits there.
 
-**Gotcha:** zsh reads `.zshenv` only once, from `~/`, before ZDOTDIR changes —
-it never reads `$ZDOTDIR/.zshenv` by itself. That's why `~/.zshenv` sources it
+**Gotcha:** zsh picks its `.zshenv` before running it. When ZDOTDIR is unset
+(a new terminal, a login), it reads only `~/.zshenv` and does not go on to read
+`$ZDOTDIR/.zshenv` after that file sets ZDOTDIR — so `~/.zshenv` sources it
 explicitly (without that line PATH, EDITOR and the telemetry opt-outs are lost).
+When ZDOTDIR is already exported (`exec zsh`, a zsh started from zsh), zsh reads
+`$ZDOTDIR/.zshenv` directly and skips `~/.zshenv`, so it is never loaded twice.
 
 ---
 
@@ -662,7 +667,7 @@ All functions live in `conf.d/functions.zsh` and `conf.d/git.zsh`.
 | `git-log-fzf` | `git-log-fzf` | Browse git log in fzf. Preview: full diff |
 | `git-diff-fzf` | `git-diff-fzf` | Pick file from `git status` → show its diff |
 | `wip` | `wip` | Stage everything → commit `"wip: <date time> [skip ci]"` |
-| `unwip` | `unwip` | Undo last wip commit, keep changes staged |
+| `unwip` | `unwip` | Undo last wip commit; changes stay in the working tree, unstaged (`git reset HEAD~1`) |
 | `git-clone-cd` | `git-clone-cd user/repo` | Clone (expands GitHub shorthand) → cd into it |
 | `pr-checkout` | `pr-checkout 42` | `gh pr checkout 42` |
 | `git-open` | `git-open` | Open current repo on GitHub in browser |
