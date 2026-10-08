@@ -52,6 +52,15 @@ jobs:
       DESKTOP: "0"
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      # git must exist before checkout, or the action downloads a tarball with
+      # no .git — the installer stows from `git ls-files` (a real clone has it)
+      - name: Git for checkout
+        run: |
+          if command -v apt-get >/dev/null; then apt-get update -qq && apt-get install -y -qq git ca-certificates
+          elif command -v dnf >/dev/null; then dnf install -y -q git
+          elif command -v pacman >/dev/null; then pacman -Sy --noconfirm --needed git
+          fi
+
       - uses: actions/checkout@v4
 
       - name: Install (first run)

@@ -24,7 +24,7 @@ for c in node npm codex pnpm yarn markdownlint-cli2 tree-sitter; do
 done
 
 herdr config check >/dev/null && ok "herdr config" || fail "herdr config check"
-[[ -L "$HOME/.zshenv" ]] && ok "stow linked ~/.zshenv" || fail "~/.zshenv not linked"
+[[ -L "$HOME/.zshenv" ]] && ok "stow linked ~/.zshenv" || fail "\$HOME/.zshenv not linked"
 for p in agents lib installLinux.sh .github; do
   [[ -e "$HOME/$p" ]] && fail "repo-only path stowed into HOME: $p"
 done
