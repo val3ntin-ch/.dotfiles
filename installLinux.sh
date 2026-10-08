@@ -60,9 +60,10 @@ pm_install() {
     zypper) install=(zypper -n -q install --no-recommends) ;;
   esac
   $SUDO "${install[@]}" "$@" >/dev/null 2>&1 && return
-  local p
+  local p out
   for p in "$@"; do
-    $SUDO "${install[@]}" "$p" >/dev/null 2>&1 || echo "  (not in $PM repos: $p — fallback below if needed)"
+    out="$($SUDO "${install[@]}" "$p" 2>&1)" \
+      || echo "  (not installed via $PM: $p — $(tail -1 <<<"$out")) — fallback below if needed"
   done
 }
 
@@ -123,16 +124,16 @@ step "Native packages"
 pm_refresh
 # generic list; per-distro names below. Anything absent gets a fallback in step 2.
 case $PM in
-  apt)    BASE=(build-essential curl git ca-certificates unzip xz-utils file fontconfig sudo procps)
+  apt)    BASE=(build-essential curl git ca-certificates unzip xz-utils file fontconfig sudo procps findutils)
           PKGS=(zsh fish stow jq ripgrep fzf zoxide bat fd-find golang-go gh git-delta eza lazygit
                 vivid neovim watchman ffmpeg poppler-utils imagemagick 7zip python3 xclip wl-clipboard) ;;
-  dnf)    BASE=(gcc gcc-c++ make curl git ca-certificates unzip xz file fontconfig sudo procps-ng util-linux-user)
+  dnf)    BASE=(gcc gcc-c++ make curl git ca-certificates unzip xz file fontconfig sudo procps-ng util-linux-user findutils)
           PKGS=(zsh fish stow jq ripgrep fzf zoxide bat fd-find golang gh git-delta eza lazygit
                 vivid neovim watchman ffmpeg-free poppler-utils ImageMagick 7zip python3 xclip wl-clipboard) ;;
-  pacman) BASE=(base-devel curl git ca-certificates unzip xz file fontconfig sudo procps-ng)
+  pacman) BASE=(base-devel curl git ca-certificates unzip xz file fontconfig sudo procps-ng findutils)
           PKGS=(zsh fish stow jq ripgrep fzf zoxide bat fd go github-cli git-delta eza lazygit
                 vivid ouch yazi starship neovim ffmpeg poppler imagemagick 7zip resvg python xclip wl-clipboard) ;;
-  zypper) BASE=(gcc gcc-c++ make curl git ca-certificates unzip xz file fontconfig sudo procps)
+  zypper) BASE=(gcc gcc-c++ make curl git ca-certificates unzip xz file fontconfig sudo procps findutils)
           PKGS=(zsh fish stow jq ripgrep fzf zoxide bat fd go gh git-delta eza lazygit
                 vivid neovim ffmpeg poppler-tools ImageMagick 7zip python3 xclip wl-clipboard) ;;
 esac
