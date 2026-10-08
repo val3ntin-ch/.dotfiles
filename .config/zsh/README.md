@@ -679,7 +679,7 @@ All functions live in `conf.d/functions.zsh` and `conf.d/git.zsh`.
 
 | Function | Usage | What it does |
 |---|---|---|
-| `hdev` | `hdev`, `hdev myproject`, `hdev -e -a codex ./path`, `hdev -n` | Open an agent for a project (default `claude`); focuses it if already running; reuses idle shell panes before splitting; inside a git repo uses the repo root. `-e` adds nvim (idle pane, else 70/30), `-n` forces a new workspace. Prints what it did and herdr errors |
+| `hdev` | `hdev`, `hdev myproject`, `hdev -a codex ./path`, `hdev -o`, `hdev -n` | nvim (70%) + agent (30%, default `claude`) for a project; focuses what already runs; reuses idle shell panes before splitting; inside a git repo uses the repo root. `-o` agent only, `-n` forces a new workspace. Prints what it did and herdr errors |
 
 ### Nvim / plugin updates
 

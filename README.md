@@ -338,7 +338,7 @@ Prefix is `Ctrl+t` (same as the old tmux setup).
 
 | Keys | Action |
 |---|---|
-| `hdev [-e] [-n] [-a codex\|opencode] [dir\|zoxide-query]` | Open an agent for a project (default: claude). If that agent already runs there, focus it instead of starting another. Reuses idle shell panes in the project's workspace before splitting new ones. Inside a git repo it uses the repo root. Always prints what it did; herdr errors point to `doctor.sh`. `-e` adds nvim (in an idle pane, else 70% beside the agent), `-n` forces a new workspace |
+| `hdev [-o] [-n] [-a codex\|opencode] [dir\|zoxide-query]` | Open nvim (left 70%) + an agent (right 30%, default claude) for a project. What already runs is focused, not duplicated; idle shell panes in the project's workspace are reused before splitting new ones. Inside a git repo it uses the repo root. Always prints what it did; herdr errors point to `doctor.sh`. `-o` agent only, `-n` forces a new workspace |
 | `Ctrl+h/j/k/l` in nvim | Move between nvim splits, then into the neighbouring herdr pane |
 | `prefix h/j/k/l` | Move between herdr panes (from a shell/agent pane) |
 | `prefix g` / `prefix v` | Split side by side / stacked |
@@ -355,7 +355,7 @@ a reboot or server restart herdr restores every workspace, tab and pane and
 resumes each agent into its conversation (`[session] resume_agents_on_restore`).
 An agent that never got a message has nothing to resume (Claude prints `No
 conversation found`) and nvim isn't restored — those panes come back as plain
-shells. Run `hdev` (or `hdev -e`) again: it focuses what's still running and
+shells. Run `hdev` again: it focuses what's still running and
 reuses those idle panes instead of adding new ones.
 
 Agents running in herdr can drive it too: `herdr --skill` prints the skill

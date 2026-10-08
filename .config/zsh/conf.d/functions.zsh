@@ -313,7 +313,7 @@ _hdev_idle_pane() {
   done
 }
 
-# _hdev_add_editor — `hdev -e` on a project whose agent already runs: open nvim
+# _hdev_add_editor — `hdev` on a project whose agent already runs: open nvim
 # in an idle shell pane of that workspace, else split it off the agent (nvim
 # left 70%). Only says so when nvim is already open. Never starts an agent.
 _hdev_add_editor() {
@@ -343,7 +343,7 @@ _hdev_add_editor() {
   echo "hdev: nvim opened in new pane $ed"
 }
 
-# hdev — herdr workspace for a project: agent, plus nvim with -e
+# hdev — herdr workspace for a project: nvim + agent (-o: agent only)
 # Reuses what exists: an agent already running in the project is focused (not
 # duplicated), and idle shell panes in the project's workspace (e.g. left over
 # after a herdr restart) are reused before any new split. With no argument
@@ -351,16 +351,18 @@ _hdev_add_editor() {
 # herdr errors are shown — then run ~/.dotfiles/doctor.sh.
 # Mirrors fish version: .config/fish/functions/hdev.fish
 #
-# Usage: hdev [-e] [-n] [-a claude|codex|opencode] [dir | zoxide-query]
-#   -e  also open nvim (left 70%, agent right 30%)
+# Usage: hdev [-o] [-n] [-a claude|codex|opencode] [dir | zoxide-query]
+#   default: nvim (left 70%) + agent (right 30%)
+#   -o  agent only, no nvim  (-e is accepted and means the default)
 #   -n  always open a new workspace, even if the project already has one
 hdev() {
-  local agent=claude editor=0 new=0 root name ws running main anchor side opt json
+  local agent=claude editor=1 new=0 root name ws running main anchor side opt json
   local OPTIND=1
-  while getopts "a:en" opt; do
+  while getopts "a:eon" opt; do
     case $opt in
       a) agent="$OPTARG" ;;
       e) editor=1 ;;
+      o) editor=0 ;;
       n) new=1 ;;
       *) return 1 ;;
     esac

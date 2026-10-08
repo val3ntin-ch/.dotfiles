@@ -1,6 +1,7 @@
-function hdev -d "Herdr workspace for a project: agent (+ nvim with -e)"
-    # Usage: hdev [-e] [-n] [-a claude|codex|opencode] [project-dir | zoxide-query]
-    #   -e  also open nvim (left 70%, agent right 30%)
+function hdev -d "Herdr workspace for a project: nvim + agent (-o: agent only)"
+    # Usage: hdev [-o] [-n] [-a claude|codex|opencode] [project-dir | zoxide-query]
+    #   default: nvim (left 70%) + agent (right 30%)
+    #   -o  agent only, no nvim  (-e is accepted and means the default)
     #   -n  always open a new workspace, even if the project already has one
     # Reuses what exists: an agent already running in the project is focused
     # (not duplicated), and idle shell panes in the project's workspace (e.g.
@@ -8,7 +9,9 @@ function hdev -d "Herdr workspace for a project: agent (+ nvim with -e)"
     # With no argument inside a git repo, the project is the repo root.
     # Always prints what it did; herdr errors are shown — then run doctor.sh.
     # Mirrors zsh version: .config/zsh/conf.d/functions.zsh
-    argparse 'a/agent=' e/editor n/new -- $argv; or return
+    argparse 'a/agent=' e/editor o/only n/new -- $argv; or return
+    set -l editor 1
+    set -q _flag_only; and set editor 0
     set -l agent claude
     set -q _flag_agent; and set agent $_flag_agent
 
@@ -48,7 +51,7 @@ function hdev -d "Herdr workspace for a project: agent (+ nvim with -e)"
         if test -n "$running"
             _hdev_h agent focus $running >/dev/null; or return 1
             echo "hdev: $agent already running in $name (pane $running) — focused"
-            set -q _flag_editor; and _hdev_add_editor $running $root
+            test $editor = 1; and _hdev_add_editor $running $root
             return
         end
     end
@@ -82,7 +85,7 @@ function hdev -d "Herdr workspace for a project: agent (+ nvim with -e)"
         echo "hdev: new workspace $name"
     end
 
-    if set -q _flag_editor
+    if test $editor = 1
         # --ratio is the share kept by the original (left) pane
         set -l side (_hdev_h pane split $main --direction right --ratio 0.7 --cwd $root --no-focus | jq -r .result.pane.pane_id)
         test -n "$side"; or return 1
@@ -123,7 +126,7 @@ function _hdev_idle_pane -a ws exclude
     end
 end
 
-# -e on a project whose agent already runs: open nvim in an idle shell pane of
+# hdev on a project whose agent already runs: open nvim in an idle shell pane of
 # that workspace, else split it off the agent (nvim left 70%). Only says so
 # when nvim is already open. Never starts an agent.
 function _hdev_add_editor -a agent_pane root
