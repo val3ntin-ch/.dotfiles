@@ -36,7 +36,7 @@ and Linux. Every file lives in `~/.config/zsh/` — tracked by git via GNU Stow.
 
 ```
 ~/.dotfiles/
-├── install.sh                    ← run once after cloning
+├── install.sh                    ← run after cloning (safe to rerun)
 ├── .zshenv                       ← THE ONLY FILE AT ~/  (sets ZDOTDIR)
 └── .config/
     └── zsh/                      ← $ZDOTDIR, stowed to ~/.config/zsh/
@@ -50,7 +50,9 @@ and Linux. Every file lives in `~/.config/zsh/` — tracked by git via GNU Stow.
             ├── aliases.zsh
             ├── functions.zsh
             ├── git.zsh
-            └── completions.zsh
+            ├── completions.zsh
+            ├── dotenv.zsh        ← auto-source .env on cd
+            └── magic-enter.zsh   ← empty Enter → git status / eza
 ```
 
 GNU Stow creates symlinks:
@@ -68,8 +70,8 @@ why each file exists.
 
 ```
 Every shell (scripts, SSH, cron, interactive):
-  1. ~/.zshenv              → sets ZDOTDIR, nothing else
-  2. $ZDOTDIR/.zshenv       → PATH, env vars, exports
+  1. ~/.zshenv              → sets ZDOTDIR, then sources $ZDOTDIR/.zshenv
+  2. $ZDOTDIR/.zshenv       → PATH, env vars, exports (sourced by step 1)
 
 Login shells only (first terminal open, SSH session):
   3. $ZDOTDIR/.zprofile     → brew shellenv, fnm, version managers
@@ -79,12 +81,16 @@ Interactive shells (every new tab, pane, exec zsh):
 ```
 
 **Login vs interactive:** opening your terminal app = login + interactive.
-A new herdr pane = interactive only (not login). This matters because `.zprofile`
-only runs once per session while `.zshrc` runs for every pane.
+New herdr panes are login shells too on macOS (herdr `shell_mode = "auto"`), so
+`.zprofile` runs per pane there; `exec zsh` or a nested `zsh` is interactive only.
 
 **The ZDOTDIR trick:** `~/.zshenv` sets `export ZDOTDIR="$HOME/.config/zsh"`.
-After that, ZSH looks for all other config files inside `$ZDOTDIR` instead of `~/`.
+After that, ZSH looks for `.zprofile`/`.zshrc` inside `$ZDOTDIR` instead of `~/`.
 This keeps `~/` clean — only `~/.zshenv` sits there.
+
+**Gotcha:** zsh reads `.zshenv` only once, from `~/`, before ZDOTDIR changes —
+it never reads `$ZDOTDIR/.zshenv` by itself. That's why `~/.zshenv` sources it
+explicitly (without that line PATH, EDITOR and the telemetry opt-outs are lost).
 
 ---
 
@@ -92,14 +98,15 @@ This keeps `~/` clean — only `~/.zshenv` sits there.
 
 ### `~/.zshenv` (at `~/`)
 
-The only file not inside `.config/zsh/`. One line:
+The only file not inside `.config/zsh/`. Sets ZDOTDIR + XDG dirs, then sources
+the real env file:
 
 ```zsh
 export ZDOTDIR="$HOME/.config/zsh"
+[[ -r "$ZDOTDIR/.zshenv" ]] && source "$ZDOTDIR/.zshenv"
 ```
 
-That's it. Redirect everything else to ZDOTDIR. Stowed via `ln -sf` by `install.sh`
-because Stow manages `.config/*` packages, not root-level dotfiles.
+Linked to `~/.zshenv` by stow along with everything else.
 
 ---
 
@@ -134,8 +141,8 @@ Rule: **no subprocess forks, no eval, no output**. Pure variable assignments onl
 | `JAVA_HOME` | `/Library/.../zulu-17.jdk/...` | React Native Android builds. Guard-checked — no-op if path absent |
 | `ANDROID_HOME` | `~/Library/Android/sdk` | React Native Android. Guard-checked. Adds `emulator` + `platform-tools` to PATH |
 | `BAT_THEME` | `Catppuccin Mocha` | Syntax highlight theme for bat / MANPAGER |
-| `RIPGREP_CONFIG_PATH` | `~/.config/ripgrep/config` | rg reads this file for default flags |
 | `FZF_DEFAULT_OPTS` | Catppuccin Mocha colours + layout | All fzf invocations inherit this |
+| `DO_NOT_TRACK`, `DISABLE_TELEMETRY`, `*_TELEMETRY_DISABLED`, … | `1` / `off` | Telemetry opt-outs (Claude Code, Vercel/Caveman plugins, Next, Turbo, Expo, Astro, Gatsby, Storybook) — mirrored in fish `env.fish` |
 | `FZF_DEFAULT_COMMAND` | `fd --type f --hidden ...` | fzf uses fd instead of find |
 | `FZF_CTRL_T_OPTS` | bat file preview | Ctrl-T file picker has a preview panel |
 | `FZF_ALT_C_OPTS` | eza tree preview | Alt-C dir picker has a tree preview |
@@ -206,14 +213,15 @@ Key options:
 | `AUTO_CD` | Type a directory name alone → cd into it |
 | `AUTO_PUSHD` | Every `cd` pushes the old dir onto a stack |
 | `PUSHD_IGNORE_DUPS` | Don't push duplicates onto the stack |
+| `PUSHD_SILENT` | Don't print the stack after every `cd` |
 | `GLOB_DOTS` | `*` matches dotfiles without needing `.*` |
 | `EXTENDED_GLOB` | `^pattern`, `(#i)case-insensitive`, `**/` recursive |
 | `NULL_GLOB` | Unmatched glob expands to empty, not an error |
-| `CORRECT` | Suggests corrections for mistyped commands |
 | `NO_BEEP` | Silence |
 | `INTERACTIVE_COMMENTS` | Allow `# comments` at the interactive prompt |
 | `MULTIOS` | `cmd > f1 > f2` writes to both files |
 | `RC_QUOTES` | `'it''s'` → `"it's"` inside single-quoted strings |
+| `LONG_LIST_JOBS` | PID + status in long format for background jobs |
 
 #### § 5 — Vi mode
 
@@ -239,7 +247,6 @@ After antidote loads the plugins, these settings configure their behaviour:
 - `FAST_HIGHLIGHT_STYLES[*]` — 17 token types mapped to Catppuccin Mocha hex values
 - `HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND` — Catppuccin green on match
 - `HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND` — Catppuccin red on no match
-- `YSU_MESSAGE_FORMAT` — "alias hint" reminder styled in Catppuccin yellow/green
 - fzf-tab `zstyle` per-command previews — cd shows eza tree, files show bat content,
   git subcommands show diffs/logs, kill shows process details
 
@@ -334,10 +341,9 @@ Managed by **Antidote**. Source of truth: `.zsh_plugins.txt`.
 | 6 | `jeffreytse/zsh-vi-mode` | Full vim keybindings: text objects (`ciw`, `da"`), surround, cursor shapes | Built-in `bindkey -v` breaks fzf and has no text objects. This plugin provides `zvm_after_init()` hook |
 | 7 | `hlissner/zsh-autopair` | Auto-closes `()`, `[]`, `{}`, `""`, `''`. Backspace on empty pair deletes both | Zero config, handles edge cases (won't double-close if you type the closing char) |
 | 8 | `kutsan/zsh-system-clipboard` | Vi-mode `y`/`d`/`p` interact with the system clipboard, not just ZSH's kill ring | Auto-detects pbcopy (macOS), xclip/xsel (X11), wl-copy (Wayland) |
-| 9 | `MichaelAquilina/zsh-you-should-use` | After running a command, reminds you if an alias exists for it | Trains alias muscle memory. Configured with `YSU_MESSAGE_POSITION=after` |
-| 10 | `mollifier/cd-gitroot` | `cdg` — jump to the root of the current git repo instantly | Complements `groot` alias; useful when deep in nested directories |
-| 11 | `conf.d/dotenv.zsh` (native) | Auto-sources `.env` when you `cd` into a directory | Asks confirmation first time. Allow/deny lists in `~/.cache/zsh/` (proper XDG paths) |
-| 12 | `conf.d/magic-enter.zsh` (native) | Press `Enter` on empty prompt → `git status` in a repo, `eza -la` elsewhere | Saves the most common "what's here?" command |
+| 9 | `mollifier/cd-gitroot` | `cdg` — jump to the root of the current git repo instantly | Complements `groot` alias; useful when deep in nested directories |
+| 10 | `conf.d/dotenv.zsh` (native) | Auto-sources `.env` when you `cd` into a directory | Asks confirmation first time. Allow/deny lists in `~/.cache/zsh/` (proper XDG paths) |
+| 11 | `conf.d/magic-enter.zsh` (native) | Press `Enter` on empty prompt → `git status` in a repo, `eza -la` elsewhere | Saves the most common "what's here?" command |
 
 **Fallback note:** Plugin #2 can be swapped back to `zsh-users/zsh-syntax-highlighting`
 by commenting out `zdharma-continuum/fast-syntax-highlighting` and uncommenting the
@@ -351,17 +357,13 @@ fallback line in `.zsh_plugins.txt`. Both are compatible with fzf-tab and autosu
 
 | Alias | Command | Use case |
 |---|---|---|
-| `ls` | `eza --icons --group-directories-first` | Default listing |
-| `l` | `eza ... -1` | Single column |
-| `ll` | `eza ... -la --git --header --time-style=relative` | Long listing — daily driver |
-| `la` | `eza ... -lA --git --header` | Include hidden files |
-| `lt` | `eza --tree --level=2` | Project structure overview |
-| `ltt` | `eza --tree --level=3` | Deeper tree |
-| `ltl` | `eza --tree --level=2 -la --git` | Tree + details |
-| `lg` | `eza ... --git-ignore` | Hide gitignored files |
-| `lm` | `eza ... --sort=modified --reverse` | What changed recently? |
-| `lz` | `eza ... --sort=size --reverse` | Largest files first |
-| `ldu` | `eza ... --total-size --sort=size --reverse` | Directory sizes |
+| `ls` | `eza --group-directories-first --icons` | Default listing |
+| `ll` | `eza -l -g --icons` | Long listing |
+| `la` | `eza -a --icons` | Include hidden files |
+| `lla` | `eza -la -g --icons` | Long + hidden |
+| `llt` | `eza -la -g --icons --tree --level=2` | Tree + details |
+
+Without eza installed these fall back to BSD `ls` equivalents.
 
 ### bat (cat replacement)
 
@@ -521,9 +523,8 @@ fallback line in `.zsh_plugins.txt`. Both are compatible with fzf-tab and autosu
 | `groot` | `cd $(git rev-parse --show-toplevel)` |
 | `ghash` | `git rev-parse --short HEAD` |
 | `gurl` | `git remote get-url origin` |
-| `gwip` | Quick WIP commit (function — see functions) |
-| `gunwip` | Undo last WIP commit |
-| `gopen` | Open repo in browser |
+| `wip` / `unwip` | WIP commit / undo it (functions — see below) |
+| `git-open` | Open repo in browser (function — see below) |
 
 ### pnpm / Node
 
@@ -656,29 +657,32 @@ All functions live in `conf.d/functions.zsh` and `conf.d/git.zsh`.
 
 | Function | Usage | What it does |
 |---|---|---|
-| `gswitch` | `gswitch` | Fuzzy branch picker. Preview: last 15 commits per branch |
-| `gadd` | `gadd` | Fuzzy interactive staging. Preview: diff per file. Multi-select with Tab |
-| `gshow` | `gshow` | Browse git log in fzf. Preview: full diff. Enter opens in less |
-| `gdiff` | `gdiff` | Pick file from `git status` → show its diff |
-| `gwip` | `gwip` | Stage everything → commit `"wip: 2024-01-15 14:23 [skip ci]"` |
-| `gunwip` | `gunwip` | Undo last wip commit, keep changes staged |
-| `gclone` | `gclone user/repo` | Clone (expands GitHub shorthand) → cd into it |
-| `gpr` | `gpr 42` | `gh pr checkout 42` |
-| `gopen` | `gopen` | Open current repo on GitHub in browser |
+| `git-switch-fzf` | `git-switch-fzf` | Fuzzy branch picker with log preview |
+| `git-add-fzf` | `git-add-fzf` | Fuzzy interactive staging. Preview: diff per file. Multi-select with Tab |
+| `git-log-fzf` | `git-log-fzf` | Browse git log in fzf. Preview: full diff |
+| `git-diff-fzf` | `git-diff-fzf` | Pick file from `git status` → show its diff |
+| `wip` | `wip` | Stage everything → commit `"wip: <date time> [skip ci]"` |
+| `unwip` | `unwip` | Undo last wip commit, keep changes staged |
+| `git-clone-cd` | `git-clone-cd user/repo` | Clone (expands GitHub shorthand) → cd into it |
+| `pr-checkout` | `pr-checkout 42` | `gh pr checkout 42` |
+| `git-open` | `git-open` | Open current repo on GitHub in browser |
 | `gsync` | `gsync` | Fetch origin/main → rebase current branch onto it |
 | `gstat` | `gstat` | Show ahead/behind vs main for every local branch |
+| `git-branch-current` / `git-main-branch` | — | Helpers: current branch / `main` or `master` |
 
 ### herdr
 
 | Function | Usage | What it does |
 |---|---|---|
-| `hdev` | `hdev`, `hdev myproject`, `hdev -a codex ./path` | Herdr workspace: nvim left 70% + agent right 30% (default `claude`). Reuses an open workspace with the same name |
+| `hdev` | `hdev`, `hdev myproject`, `hdev -a codex ./path` | Herdr workspace: nvim left 70% + agent right 30% (default `claude`). Switches to an open workspace with the same name; if already in it, builds the layout in place |
 
 ### Nvim / plugin updates
 
 | Function | Usage | What it does |
 |---|---|---|
 | `nvimupdate` | `nvimupdate` | `:Lazy! sync` headless → latest LazyVim/plugins, then reminds you to commit `lazy-lock.json` if it changed |
+| `yaziupdate` | `yaziupdate` | `ya pkg upgrade` → latest yazi plugins, then reminds you to commit `package.toml` if it changed |
+| `fal` | `fal`, `fal git` | Fuzzy-browse all aliases, pre-filtered by argument |
 
 `lazy-lock.json` is committed on purpose — it pins every machine to the exact
 plugin commits that were last tested, so a fresh clone never silently picks up
@@ -699,7 +703,7 @@ to your other machine.
 |---|---|---|
 | `fh` | `fh` | Fuzzy history search → puts selection in buffer (doesn't run immediately) |
 | `fkill` | `fkill` or `fkill -15` | Fuzzy process picker → kill. Multi-select with Tab |
-| `myip` | `myip` | Show local + public IP |
+| `my-ip` | `my-ip` | Show local + public IP (`myip` alias = public only) |
 | `serve` | `serve` or `serve 3000` | Python HTTP server in current dir |
 
 ### Dotfiles

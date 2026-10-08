@@ -43,8 +43,7 @@ No includes or split files — single flat config.
 | `font-thicken` | `true` | slightly bolder stroke on Retina/HiDPI displays |
 | `font-feature = calt` | contextual alternates | JetBrains Mono ligatures (`->`, `=>`, `!=`, `//`) |
 | `font-feature = liga` | standard ligatures | JetBrains Mono ligatures (secondary set) |
-| `background-opacity` | `0.8` | 80% — slight transparency |
-| `background-blur-radius` | `20` | macOS blur behind transparent background |
+| `background-opacity` | `1` | fully opaque (no blur needed) |
 | `window-padding-x/y` | `8` | breathing room around terminal content |
 | `window-save-state` | `always` | restore size/position/tabs/splits on relaunch (macOS) |
 
@@ -83,9 +82,9 @@ Shell integration enables:
 
 | Key | Value |
 |---|---|
-| `scrollback-limit` | `10000000` (10M lines) |
+| `scrollback-limit` | `10000000` | scrollback buffer size in bytes (~10 MB) |
 
-Effectively unlimited. Herdr keeps its own per-pane scrollback.
+Ghostty measures this in bytes, not lines. Inside herdr, each pane keeps its own scrollback (herdr default: 10 MB per pane).
 
 ### Updates
 

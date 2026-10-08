@@ -6,8 +6,8 @@ Fish has a strict load order. Every time you open a terminal (or a new herdr
 pane, or run `exec fish`) Fish loads files in this sequence:
 
 ```
-~/.config/fish/config.fish          → always, every shell
 ~/.config/fish/conf.d/*.fish        → always, alphabetical order, before config.fish
+~/.config/fish/config.fish          → always, every shell
 ~/.config/fish/functions/*.fish     → autoloaded on first call (lazy)
 ~/.config/fish/completions/*.fish   → autoloaded when tab-completing
 ```
@@ -29,8 +29,9 @@ You never need to `source` them. Drop a file `foo.fish` in `functions/` and
 fish_plugins   ← the plugin list (like .zsh_plugins.txt in antidote)
 ```
 
-Fisher is the package manager. It reads `fish_plugins`, clones repos into
-`~/.local/share/fisher`, and generates function/conf.d files.
+Fisher is the package manager. It reads `fish_plugins` and copies each plugin's
+`functions/`, `conf.d/`, `completions/` and `themes/` files straight into
+`~/.config/fish/` — which is why those files are listed in `.gitignore`.
 
 why Fisher over others (Oh-My-Fish, etc)?
 - Plugin list is a plain text file → easy to read, diff, review in git
@@ -76,7 +77,6 @@ Putting environment variables here makes them available everywhere.
 | `MANPAGER` | `sh -c 'col -bx \| bat -l man -p'` | renders man pages with bat syntax highlighting |
 | `MANROFFOPT` | `-c` | fixes color rendering in man via bat |
 | `BAT_THEME` | `Catppuccin Mocha` | syntax highlighting theme for bat |
-| `RIPGREP_CONFIG_PATH` | `~/.config/ripgrep/config` | persistent rg flags |
 | `FZF_DEFAULT_OPTS` | Catppuccin Mocha colors + bindings | see below |
 | `FZF_DEFAULT_COMMAND` | `fd --type f --hidden ...` | fd instead of find (respects .gitignore) |
 | `FZF_CTRL_T_COMMAND` | same as DEFAULT_COMMAND | files picker |
@@ -95,6 +95,7 @@ Putting environment variables here makes them available everywhere.
 | `DELTA_FEATURES` | `catppuccin-mocha` | delta color theme |
 | `HOMEBREW_NO_ANALYTICS` | `1` | disable brew telemetry |
 | `HOMEBREW_NO_AUTO_UPDATE` | `1` | update on your terms, not brew's |
+| `DO_NOT_TRACK`, `DISABLE_TELEMETRY`, `*_TELEMETRY_DISABLED`, … | `1` / `off` | telemetry opt-outs (Claude Code, Vercel/Caveman plugins, Next, Turbo, Expo, Astro, Gatsby, Storybook) — mirrors zsh `.zshenv` |
 
 **FZF Catppuccin Mocha palette:**
 ```
@@ -489,7 +490,23 @@ Rename a branch locally and on origin. Updates the remote tracking ref.
 #### `hdev [-a agent] [dir | zoxide-query]`
 Open a herdr workspace for a project: `nvim .` left 70%, agent right 30%
 (default `claude`; `-a codex` / `-a opencode`). If a workspace with the
-project's name is already open, focuses it instead. Must run inside herdr.
+project's name is already open, switches to it; if you're already in it, builds
+the layout in place. Must run inside herdr.
+
+---
+
+### Updates / helpers
+
+#### `nvimupdate`
+`:Lazy! sync` headless → latest LazyVim/plugins, then reminds you to commit
+`lazy-lock.json` if it changed.
+
+#### `yaziupdate`
+`ya pkg upgrade` → latest yazi plugins, then reminds you to commit
+`package.toml` if it changed.
+
+#### `fal [query]`
+Fuzzy-browse all aliases and abbreviations, pre-filtered by the argument.
 
 ---
 

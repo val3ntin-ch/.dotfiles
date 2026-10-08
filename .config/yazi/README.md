@@ -26,7 +26,7 @@ plugin system, and Catppuccin Mocha theming.
 
 ## Plugins
 
-Plugins installed via `ya pkg install` (reads `package.toml`). Not committed — reinstall on new machine.
+Plugins are listed (with pinned revisions) in `package.toml`; the plugin code itself is gitignored. `install.sh` runs `ya pkg upgrade` to install/update them, or run `yaziupdate` any time.
 
 | Plugin | Key | Description |
 |---|---|---|

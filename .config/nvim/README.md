@@ -73,8 +73,8 @@ Managed via `lazyvim.json`. Toggle with `:LazyExtras` inside nvim.
 ### Formatting & linting
 | Extra | Provides |
 |---|---|
-| `formatting.prettier` | prettier via conform.nvim for js/ts/jsx/tsx/json/css/html/md |
-| `linting.eslint` | eslint_d via nvim-lint for js/ts/jsx/tsx |
+| `formatting.prettier` | conform.nvim formatting — overridden to **prettierd** (persistent daemon) in `lua/plugins/formatting.lua` |
+| `linting.eslint` | ESLint language server (diagnostics + fix-all) for js/ts/jsx/tsx |
 
 ### Coding
 | Extra | Provides |
@@ -87,7 +87,8 @@ Managed via `lazyvim.json`. Toggle with `:LazyExtras` inside nvim.
 ### Utils
 | Extra | Provides |
 |---|---|
-| `test.core` | Test runner integration (neotest) |
+| `dap.core` | Debugger (nvim-dap) — Node/React adapters in `lua/plugins/dap.lua` |
+| `test.core` | Test runner integration (neotest + neotest-jest) |
 | `util.dot` | Dotfile editing helpers |
 | `util.mini-hipatterns` | Highlight hex colors, TODO, FIXME inline |
 
@@ -107,8 +108,10 @@ Auto-installed by Mason on first launch.
 | marksman | LSP | Markdown |
 | graphql-language-service | LSP | GraphQL |
 | lua-language-server | LSP | Lua (for editing nvim config) |
-| prettier | Formatter | JS/TS/JSX/TSX/JSON/CSS/HTML/MD |
-| eslint_d | Linter | JS/TS/JSX/TSX |
+| eslint-lsp | LSP | ESLint diagnostics for JS/TS/JSX/TSX |
+| emmet-ls | LSP | Emmet in HTML/CSS/SCSS only |
+| prettierd | Formatter | JS/TS/JSX/TSX/JSON/CSS/SCSS/HTML/MD/YAML/GraphQL |
+| js-debug-adapter | Debugger | Node / Chrome (nvim-dap) |
 | stylua | Formatter | Lua |
 
 ---
@@ -119,7 +122,7 @@ LazyVim uses `<Space>` as leader. Key prefixes:
 
 | Prefix | Category |
 |---|---|
-| `<leader>f` | Find (fzf-lua) |
+| `<leader>f` | Find (snacks picker) |
 | `<leader>g` | Git (lazygit, hunks) |
 | `<leader>c` | Code (LSP actions) |
 | `<leader>l` | Lazy (plugin manager) |
@@ -133,7 +136,7 @@ LazyVim uses `<Space>` as leader. Key prefixes:
 |---|---|
 | `<leader>ca` | Code action |
 | `<leader>cr` | Rename symbol (inc-rename — live preview) |
-| `<leader>cf` | Format file (prettier) |
+| `<leader>cf` | Format file (prettierd) |
 | `gd` | Go to definition |
 | `gr` | Go to references |
 | `K` | Hover documentation |
@@ -148,6 +151,12 @@ LazyVim uses `<Space>` as leader. Key prefixes:
 | `<leader>fg` | Live grep |
 | `<leader>fb` | Buffers |
 | `<leader>e` | File explorer (neo-tree) |
+
+### Window / herdr pane navigation
+
+| Key | Action |
+|---|---|
+| `Ctrl+h/j/k/l` | Move between splits; at the edge, jump to the neighbouring herdr pane (`lua/config/keymaps.lua`) |
 
 ### Git
 
@@ -188,7 +197,11 @@ LazyVim uses `<Space>` as leader. Key prefixes:
     │   ├── keymaps.lua         custom keymaps
     │   └── autocmds.lua        custom autocommands
     └── plugins/
-        └── webdev.lua          Catppuccin + JSX autotag + HTML/GraphQL LSP
+        ├── webdev.lua          colorscheme (onedark deep; catppuccin installed) + JSX autotag + CSS/HTML/GraphQL/Emmet LSP + neotest-jest
+        ├── formatting.lua      prettierd instead of prettier
+        ├── dap.lua             Node/Chrome debug adapters + launch configs
+        ├── blink.lua           <Tab> accepts completions (super-tab preset)
+        └── neo-tree.lua        show dotfiles/gitignored files
 ```
 
 ### Adding a plugin

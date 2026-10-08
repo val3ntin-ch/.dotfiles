@@ -86,9 +86,6 @@ export GIT_EDITOR="nvim"
 # ── Bat theme ─────────────────────────────────────────────────────────────
 export BAT_THEME="Catppuccin Mocha"
 
-# ── ripgrep config ────────────────────────────────────────────────────────
-export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/config"
-
 # ── fzf ───────────────────────────────────────────────────────────────────
 # Catppuccin Mocha palette
 export FZF_DEFAULT_OPTS="

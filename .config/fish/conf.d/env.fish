@@ -25,9 +25,6 @@ set -gx MANROFFOPT -c
 # ── bat ───────────────────────────────────────────────────────────────────
 set -gx BAT_THEME "Catppuccin Mocha"
 
-# ── ripgrep ───────────────────────────────────────────────────────────────
-set -gx RIPGREP_CONFIG_PATH $HOME/.config/ripgrep/config
-
 # ── fzf — Catppuccin Mocha ────────────────────────────────────────────────
 set -gx FZF_DEFAULT_OPTS "
   --height=50%
