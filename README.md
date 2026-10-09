@@ -263,6 +263,7 @@ Native (no plugin needed):
 | [Codex](https://github.com/openai/codex) | OpenAI coding agent (cask) |
 | [OpenCode](https://opencode.ai) | Open-source coding agent (`anomalyco/tap`) |
 | [Conductor](https://conductor.build) | Mac app — parallel Claude/Codex agents in worktrees |
+| [squad](https://github.com/val3ntin-ch/squad) | A team of agents on one repo inside herdr: GPT-6.1 lead, Claude/Codex devs, cross-vendor reviewers, tester (`installAi.sh`) |
 
 Each CLI agent gets herdr's integration hook (`herdr integration install …`),
 so the herdr sidebar shows whether an agent is working, waiting or done.
@@ -372,7 +373,7 @@ Opt-outs set by this repo. Auto-updates stay on for Claude Code.
 | `.config/zsh/.zshenv`, `.config/fish/conf.d/env.fish` | `DO_NOT_TRACK`, Claude Code `DISABLE_TELEMETRY` + `DISABLE_ERROR_REPORTING`, Vercel plugin, Caveman plugin, Next.js, Turborepo, Expo, Astro, Gatsby, Storybook, Homebrew analytics |
 | `agents/claude/settings.base.json` `env` | Same Claude/plugin opt-outs for agents started outside a shell (Conductor, IDE) |
 | `.config/herdr/config.toml` `[update]` | No background version/manifest checks to herdr.dev — update with `brew upgrade herdr` |
-| `agents/codex/config.base.toml`, `installAi.sh` | Codex `[analytics]` and `[feedback]` disabled |
+| `agents/codex/config.base.toml`, `installAi.sh` | Codex `[analytics]` and `[feedback]` disabled; no startup update check (`check_for_update_on_startup = false`, Homebrew updates it) |
 | `agents/opencode/opencode.json` | `"share": "disabled"` — no session upload links |
 
 Your prompts and code still go to the model provider; these switches only cut

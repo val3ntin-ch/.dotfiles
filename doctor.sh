@@ -92,6 +92,8 @@ for c in git stow fish zsh nvim herdr jq fzf zoxide rg fd bat eza lazygit delta 
   have "$c" || bad "$c not found" "$([[ $OS == Darwin ]] && echo ./install.sh || echo ./installLinux.sh)"
 done
 ((${#FAILED[@]} == n)) && ok "all required tools on PATH"
+have squad && ok "squad installed ($(squad --version))" \
+  || bad "squad not installed (agent teams in herdr)" "./installAi.sh"
 
 # herdr: version + commands hdev uses
 if have herdr; then
