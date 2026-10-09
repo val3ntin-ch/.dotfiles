@@ -3,6 +3,9 @@
 # not symlinked; installAi.sh also enforces the telemetry tables below on
 # existing configs.
 model_reasoning_effort = "medium"
+# no "Update available" dialog on start: it blocks agents started by herdr/squad.
+# Homebrew updates Codex instead.
+check_for_update_on_startup = false
 
 [features]
 hooks = true
@@ -11,6 +14,11 @@ hooks = true
 enabled = false
 
 [feedback]
+enabled = false
+
+# Claude-only plugin: its Stop hook (asyncRewake, CLAUDE_PLUGIN_ROOT) fails in
+# Codex after every turn. It stays enabled in Claude Code.
+[plugins."security-guidance@claude-plugins-official"]
 enabled = false
 
 [mcp_servers.context7]

@@ -75,8 +75,31 @@ if [[ -f "$HOME/.codex/config.toml" ]]; then
     grep -q "^\[$table\]" "$HOME/.codex/config.toml" \
       || printf '\n[%s]\nenabled = false\n' "$table" >> "$HOME/.codex/config.toml"
   done
+  # no update dialog on start (it blocks herdr/squad agents): a top-level key,
+  # so it must sit before the first [table]
+  grep -q '^check_for_update_on_startup' "$HOME/.codex/config.toml" \
+    || perl -0pi -e 's/^(?=\[)/check_for_update_on_startup = false\n\n/m' "$HOME/.codex/config.toml"
+  # Claude-only plugin whose Stop hook fails in Codex: off in Codex only
+  sg='[plugins."security-guidance@claude-plugins-official"]'
+  if grep -qF "$sg" "$HOME/.codex/config.toml"; then
+    perl -0pi -e 's/(\[plugins\."security-guidance\@claude-plugins-official"\]\n)enabled = true/${1}enabled = false/' "$HOME/.codex/config.toml"
+  else
+    printf '\n%s\nenabled = false\n' "$sg" >> "$HOME/.codex/config.toml"
+  fi
 else
   cp "$DOTFILES/agents/codex/config.base.toml" "$HOME/.codex/config.toml"
 fi
+
+step "squad (agent teams in herdr)"
+# github.com/val3ntin-ch/squad — clone once, fast-forward afterwards
+SQUAD_DIR="$HOME/.local/share/squad"
+if [[ -d "$SQUAD_DIR/.git" ]]; then
+  git -C "$SQUAD_DIR" pull --ff-only -q || echo "  squad: could not update (local changes?) — left as is"
+else
+  git clone -q https://github.com/val3ntin-ch/squad "$SQUAD_DIR"
+fi
+"$SQUAD_DIR/install.sh"
+# one Codex rule so a Codex lead can call 'squad herdr' without asking
+command -v codex &>/dev/null && "$SQUAD_DIR/bin/squad" permissions
 
 printf '\n\033[1;32m✓ Web Claude skillset installed.\033[0m\n'
