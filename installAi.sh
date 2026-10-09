@@ -99,7 +99,8 @@ else
   git clone -q https://github.com/val3ntin-ch/squad "$SQUAD_DIR"
 fi
 "$SQUAD_DIR/install.sh"
-# one Codex rule so a Codex lead can call 'squad herdr' without asking
-command -v codex &>/dev/null && "$SQUAD_DIR/bin/squad" permissions
+# machine setup: Codex rules (squad herdr/git/done never ask) and Claude's
+# usage status line (only when no status line is set yet)
+"$SQUAD_DIR/bin/squad" permissions
 
 printf '\n\033[1;32m✓ Web Claude skillset installed.\033[0m\n'
