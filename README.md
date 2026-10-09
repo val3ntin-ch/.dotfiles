@@ -265,6 +265,8 @@ Native (no plugin needed):
 | [Conductor](https://conductor.build) | Mac app — parallel Claude/Codex agents in worktrees |
 | [squad](https://github.com/val3ntin-ch/squad) | A team of agents on one repo inside herdr: GPT-6.1 lead, Claude/Codex devs, cross-vendor reviewers, tester (`installAi.sh`) |
 
+Claude Code's status line runs `squad statusline` (set in `agents/claude/settings.base.json`): the model plus 5-hour and 7-day plan usage bars, also recorded for squad's live strip.
+
 Each CLI agent gets herdr's integration hook (`herdr integration install …`),
 so the herdr sidebar shows whether an agent is working, waiting or done.
 

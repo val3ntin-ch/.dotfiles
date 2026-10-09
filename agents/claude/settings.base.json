@@ -51,5 +51,9 @@
     "DO_NOT_TRACK": "1",
     "VERCEL_PLUGIN_TELEMETRY": "off",
     "CAVEMAN_TELEMETRY": "0"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "command -v squad >/dev/null 2>&1 && squad statusline 2>/dev/null || true"
   }
 }
