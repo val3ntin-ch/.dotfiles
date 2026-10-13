@@ -347,7 +347,7 @@ Managed by **Antidote**. Source of truth: `.zsh_plugins.txt`.
 | 7 | `hlissner/zsh-autopair` | Auto-closes `()`, `[]`, `{}`, `""`, `''`. Backspace on empty pair deletes both | Zero config, handles edge cases (won't double-close if you type the closing char) |
 | 8 | `kutsan/zsh-system-clipboard` | Vi-mode `y`/`d`/`p` interact with the system clipboard, not just ZSH's kill ring | Auto-detects pbcopy (macOS), xclip/xsel (X11), wl-copy (Wayland) |
 | 9 | `mollifier/cd-gitroot` | `cdg` — jump to the root of the current git repo instantly | Complements `groot` alias; useful when deep in nested directories |
-| 10 | `conf.d/dotenv.zsh` (native) | Auto-sources `.env` when you `cd` into a directory | Asks confirmation first time. Allow/deny lists in `~/.cache/zsh/` (proper XDG paths) |
+| 10 | `conf.d/dotenv.zsh` (native) | Auto-sources `.env` when you `cd` into a directory you allowed | Never prompts (a prompt on `cd` blocked commands typed after it, e.g. by `hdev`): a new `.env` gets one hint line; `dotenv allow` / `dotenv deny` remember the choice, `dotenv` loads once. Lists in `~/.cache/zsh/` |
 | 11 | `conf.d/magic-enter.zsh` (native) | Press `Enter` on empty prompt → `git status` in a repo, `eza -la` elsewhere | Saves the most common "what's here?" command |
 
 **Fallback note:** Plugin #2 can be swapped back to `zsh-users/zsh-syntax-highlighting`
@@ -723,6 +723,7 @@ to your other machine.
 | Function | Usage | What it does |
 |---|---|---|
 | `mkenv` | `mkenv` | Copy `.env.example` → `.env` |
+| `dotenv` | `dotenv`, `dotenv allow`, `dotenv deny` | Load `./.env` once / always in this dir / never mention it here |
 | `dotenv-check` | `dotenv-check` | List `.env` variable names without showing values |
 
 ---

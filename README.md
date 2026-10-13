@@ -251,7 +251,7 @@ Not on Linux: Conductor (macOS app), Homebrew. Debian/Ubuntu's `batcat` and
 | mollifier/cd-gitroot | `cdg` — jump to git repo root |
 
 Native (no plugin needed):
-- **dotenv** — auto-source `.env` on `cd` with per-directory allow/deny list
+- **dotenv** — auto-source `.env` on `cd` in directories you allowed (`dotenv allow` / `dotenv deny`); never prompts
 - **magic-enter** — empty `Enter` → `eza -la` or `git status`
 - **colored man pages** — via `MANPAGER=bat`
 
